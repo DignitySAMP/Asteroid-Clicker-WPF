@@ -20,9 +20,17 @@ namespace AsteroidClicker
     /// </summary>
     public partial class MainWindow : Window
     {
+        int amountOfAsteroids = 0;
+
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void ImgAsteroid_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            amountOfAsteroids ++;
+            Console.WriteLine($"Debug: score: {amountOfAsteroids}");
         }
     }
 }
