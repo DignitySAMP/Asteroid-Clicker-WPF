@@ -8,8 +8,11 @@
         ResizeMode="NoResize"
         Title="AsteroidClicker" Height="400" Width="800">
     <Grid>
+        <Grid.Background>
+            <ImageBrush ImageSource="assets/bg.png" Stretch="UniformToFill"></ImageBrush>
+        </Grid.Background>
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Label Name="LblScore" Content="0" HorizontalContentAlignment="Center"></Label>
+            <Label Name="LblScore" Content="0" HorizontalContentAlignment="Center" Foreground="#FFF"></Label>
             <Image Name="ImgAsteroid" Source="assets/asteroid.png" Height="128" Width="128"></Image>
         </StackPanel>
     </Grid>
