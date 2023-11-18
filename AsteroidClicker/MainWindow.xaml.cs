@@ -39,20 +39,42 @@ namespace AsteroidClicker
             blast_timer.Tick += Blast_Timer;
         }
 
+        bool IsMouseInsideImage = false;
+        bool ValidMouseClick = false;
         private void ImgAsteroid_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            amountOfAsteroids ++;
-            Console.WriteLine($"Debug: score: {amountOfAsteroids}");
+            if (IsMouseInsideImage) // Check if the pointer is actually inside our image
+            {
+                amountOfAsteroids++;
+                Console.WriteLine($"Debug: score: {amountOfAsteroids}");
 
-            Random random = new Random();
-            ImgAsteroid.Width = random.Next(100,120) ;
+                Random random = new Random();
+                ImgAsteroid.Width = random.Next(100, 120);
 
-            CreateFallingParticles();
-            CreateBlastParticle();
+                CreateFallingParticles();
+                CreateBlastParticle();
+                ValidMouseClick = true; // Validate our click. This is used in cross reference for additional features (i.e. MouseUp, ...)
+            }
         }
         private void ImgAsteroid_MouseUp(object sender, MouseButtonEventArgs e)
         {
+            if (ValidMouseClick)
+            { // BUG FIX: We only call our modifiers if the mouse click was valid: (inside image + clicked on image)
+                ImgAsteroid.Width = 128;
+                ValidMouseClick = false;
+            }
+        }
+        private void ImgAsteroid_MouseEnter(object sender, MouseEventArgs e)
+        {
+            IsMouseInsideImage = true;
+        }
+
+        private void ImgAsteroid_MouseLeave(object sender, MouseEventArgs e)
+        {   // BUG FIX 1: Reset width to default incase they leave the image without MouseUp being called.
+            // BUG FIX 2: Nullify valid mouse click and reset "IsMouseInsideImage" variable appropriately. 
             ImgAsteroid.Width = 128;
+            IsMouseInsideImage = false;
+            ValidMouseClick = false;
         }
 
         /*************************************************************************************************************************************

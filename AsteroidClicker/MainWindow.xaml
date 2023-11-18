@@ -14,7 +14,7 @@
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <Label Name="LblScore" Content="0" HorizontalContentAlignment="Center" Foreground="#FFF"></Label>
             <Grid Name="GridBlastZone">
-                <Image Name="ImgAsteroid" Source="assets/asteroid.png" Height="128" Width="128" MouseDown="ImgAsteroid_MouseDown" MouseUp="ImgAsteroid_MouseUp"></Image>
+                <Image Name="ImgAsteroid" Source="assets/asteroid.png" Height="128" Width="128" MouseDown="ImgAsteroid_MouseDown" MouseUp="ImgAsteroid_MouseUp" MouseLeave="ImgAsteroid_MouseLeave" MouseEnter="ImgAsteroid_MouseEnter"></Image>
             </Grid>
             <Canvas Name="CanvasDropParticles" Width="125" Height="50"></Canvas>
         </StackPanel>
