@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace AsteroidClicker
 {
@@ -20,17 +22,179 @@ namespace AsteroidClicker
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Global variables
         int amountOfAsteroids = 0;
 
+        // Native functions
         public MainWindow()
         {
             InitializeComponent();
+
+            DispatcherTimer ms_timer = new DispatcherTimer();
+            ms_timer.Interval = TimeSpan.FromMilliseconds(10);
+            ms_timer.Tick += MS_Timer;
+            ms_timer.Start();
+
+            blast_timer.Interval = TimeSpan.FromMilliseconds(25);
+            blast_timer.Tick += Blast_Timer;
         }
 
         private void ImgAsteroid_MouseDown(object sender, MouseButtonEventArgs e)
         {
             amountOfAsteroids ++;
             Console.WriteLine($"Debug: score: {amountOfAsteroids}");
+
+            Random random = new Random();
+            ImgAsteroid.Width = random.Next(100,120) ;
+
+            CreateFallingParticles();
+            CreateBlastParticle();
         }
+        private void ImgAsteroid_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            ImgAsteroid.Width = 128;
+        }
+
+        /*************************************************************************************************************************************
+        **************************************************************************************************************************************/
+        // Custom functions
+        private void MS_Timer(object sender, EventArgs e)
+        {
+            MoveFallingParticles();
+        }
+
+        /*************************************************************************************************************************************
+        **************************************************************************************************************************************
+        **************************************************************************************************************************************
+        **************************************************************************************************************************************/
+        // Particle system (blast OnClick + falling particles)
+
+        // Blast Effect
+        string[] blastParticleImages =
+        {
+            "/assets/particles/blast/click_blast_0.png", "/assets/particles/blast/click_blast_1.png", "/assets/particles/blast/click_blast_2.png",
+            "/assets/particles/blast/click_blast_3.png", "/assets/particles/blast/click_blast_4.png", "/assets/particles/blast/click_blast_5.png",
+            "/assets/particles/blast/click_blast_6.png", "/assets/particles/blast/click_blast_7.png", "/assets/particles/blast/click_blast_8.png",
+            "/assets/particles/blast/click_blast_9.png"
+        };
+
+        bool playingBlastAnimation = false;
+        Image blastParticleImg = new Image();
+        int blastCurrentImage = 0;
+        DispatcherTimer blast_timer = new DispatcherTimer();
+
+        private void CreateBlastParticle()
+        {
+            if (!playingBlastAnimation)
+            {
+                blastParticleImg = new Image();
+                blastParticleImg.Source = new BitmapImage(new Uri(blastParticleImages[0], UriKind.Relative));
+
+                blastParticleImg.Width = 96;
+                blastParticleImg.Height = 96;
+                blastParticleImg.IsHitTestVisible = false; // can click through image
+
+                blastCurrentImage = 0;
+
+                // Load sound from memory (added as resource)
+                var blastSound = new System.Media.SoundPlayer();
+                blastSound.Stream = AsteroidClicker.Properties.Resources.blaster;
+                blastSound.Play();
+
+                GridBlastZone.Children.Add(blastParticleImg);
+                playingBlastAnimation = true;
+
+                blast_timer.Start();
+            }
+        }
+        private void Blast_Timer(object sender, EventArgs e)
+        {
+            blastCurrentImage++;
+            if (blastCurrentImage >= blastParticleImages.Length)
+            {
+                blastCurrentImage = 0;
+                GridBlastZone.Children.Remove(blastParticleImg);
+                blast_timer.Stop();
+                playingBlastAnimation = false;
+            }
+            else blastParticleImg.Source = new BitmapImage(new Uri(blastParticleImages[blastCurrentImage], UriKind.Relative));
+        }
+
+        /*************************************************************************************************************************************
+        **************************************************************************************************************************************/
+        // Dropping debris/particle effecft
+
+        string[] fallingParticleImages =
+        {
+            "/assets/particles/drop/click_anim_0.png", "/assets/particles/drop/click_anim_1.png", "/assets/particles/drop/click_anim_2.png",
+            "/assets/particles/drop/click_anim_3.png", "/assets/particles/drop/click_anim_4.png"
+        };
+
+        private static int MAX_FALLING_PARTICLES = 15;
+        List<int> fallingParticleIndexes = new List<int>();
+        Image[] fallingParticleImg = new Image[MAX_FALLING_PARTICLES];
+        private void CreateFallingParticles()
+        {
+            ClearFallingParticles();
+
+            Random random = new Random();
+            int MAX_SPAWNED_PARTICLES = random.Next(5, MAX_FALLING_PARTICLES);
+
+            for (int index = 0; index < MAX_SPAWNED_PARTICLES; index++)
+            {
+                // Storing random sprite
+                fallingParticleImg[index] = new Image();
+                fallingParticleImg[index].Source = new BitmapImage(new Uri(fallingParticleImages[random.Next(fallingParticleImages.Length)], UriKind.Relative));
+
+                // Set random size
+                fallingParticleImg[index].Width = random.Next(12, 32);
+                fallingParticleImg[index].Height = random.Next(0, 32);
+
+                // Setting random position
+                double pos_x = random.Next(0, (int)CanvasDropParticles.Width - 20);
+                double pos_y = random.Next(-32, -16);
+
+                Canvas.SetLeft(fallingParticleImg[index], pos_x);
+                Canvas.SetTop(fallingParticleImg[index], pos_y);
+
+                // Showing inside particle canvas & adding to list
+                CanvasDropParticles.Children.Add(fallingParticleImg[index]);
+                fallingParticleIndexes.Add(index);
+            }
+        }
+        private void MoveFallingParticles()
+        {
+            Random random = new Random();
+            foreach (int index in fallingParticleIndexes)
+            {
+                double pos_y = Canvas.GetTop(fallingParticleImg[index]);
+
+                pos_y += random.Next(1, 5);
+                fallingParticleImg[index].Opacity -= 0.035;
+
+                Canvas.SetTop(fallingParticleImg[index], pos_y);
+
+                if (pos_y >= CanvasDropParticles.Height)
+                {
+                    CanvasDropParticles.Children.Remove(fallingParticleImg[index]);
+                    fallingParticleIndexes.Remove(index);
+                    break;
+                }
+            }
+        }
+
+        private void ClearFallingParticles()
+        {
+            foreach (int index in fallingParticleIndexes)
+            {
+                CanvasDropParticles.Children.Remove(fallingParticleImg[index]);
+            }
+            fallingParticleIndexes.Clear();
+        }
+
+        /*************************************************************************************************************************************
+        **************************************************************************************************************************************
+        **************************************************************************************************************************************
+        **************************************************************************************************************************************/
     }
 }

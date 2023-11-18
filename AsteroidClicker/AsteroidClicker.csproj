@@ -100,5 +100,27 @@
   <ItemGroup>
     <Resource Include="assets\bg.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="assets\particles\drop\click_anim_0.png" />
+    <Resource Include="assets\particles\drop\click_anim_1.png" />
+    <Resource Include="assets\particles\drop\click_anim_2.png" />
+    <Resource Include="assets\particles\drop\click_anim_3.png" />
+    <Resource Include="assets\particles\drop\click_anim_4.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="assets\particles\blast\click_blast_0.png" />
+    <Resource Include="assets\particles\blast\click_blast_1.png" />
+    <Resource Include="assets\particles\blast\click_blast_2.png" />
+    <Resource Include="assets\particles\blast\click_blast_3.png" />
+    <Resource Include="assets\particles\blast\click_blast_4.png" />
+    <Resource Include="assets\particles\blast\click_blast_5.png" />
+    <Resource Include="assets\particles\blast\click_blast_6.png" />
+    <Resource Include="assets\particles\blast\click_blast_7.png" />
+    <Resource Include="assets\particles\blast\click_blast_8.png" />
+    <Resource Include="assets\particles\blast\click_blast_9.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="assets\audio\blaster.wav" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
