@@ -49,6 +49,8 @@ namespace AsteroidClicker
                 amountOfAsteroids++;
                 amountOfScore++;
 
+                AdjustInfoLabels();
+
                 Random random = new Random();
                 ImgAsteroid.Width = random.Next(100, 120);
 
@@ -84,6 +86,10 @@ namespace AsteroidClicker
         private void MS_Timer(object sender, EventArgs e)
         {
             MoveFallingParticles();
+        }
+        private void AdjustInfoLabels()
+        {
+            LblAmount.Content = $"{Math.Floor(amountOfAsteroids)}";
         }
 
         /*************************************************************************************************************************************
