@@ -100,34 +100,31 @@ namespace AsteroidClicker
             "/assets/particles/blast/click_blast_9.png"
         };
 
-        bool playingBlastAnimation = false;
         Image blastParticleImg = new Image();
-        int blastCurrentImage = 0;
         DispatcherTimer blast_timer = new DispatcherTimer();
+        int blastCurrentImage = 0;
 
         private void CreateBlastParticle()
         {
-            if (!playingBlastAnimation)
-            {
-                blastParticleImg = new Image();
-                blastParticleImg.Source = new BitmapImage(new Uri(blastParticleImages[0], UriKind.Relative));
+            ClearBlastParticle();
 
-                blastParticleImg.Width = 96;
-                blastParticleImg.Height = 96;
-                blastParticleImg.IsHitTestVisible = false; // can click through image
+            blastParticleImg = new Image();
+            blastParticleImg.Source = new BitmapImage(new Uri(blastParticleImages[0], UriKind.Relative));
 
-                blastCurrentImage = 0;
+            blastParticleImg.Width = 96;
+            blastParticleImg.Height = 96;
+            blastParticleImg.IsHitTestVisible = false; // can click through image
 
-                // Load sound from memory (added as resource)
-                var blastSound = new System.Media.SoundPlayer();
-                blastSound.Stream = AsteroidClicker.Properties.Resources.blaster;
-                blastSound.Play();
+            blastCurrentImage = 0;
 
-                GridBlastZone.Children.Add(blastParticleImg);
-                playingBlastAnimation = true;
+            // Load sound from memory (added as resource)
+            var blastSound = new System.Media.SoundPlayer();
+            blastSound.Stream = AsteroidClicker.Properties.Resources.blaster;
+            blastSound.Play();
 
-                blast_timer.Start();
-            }
+            GridBlastZone.Children.Add(blastParticleImg);
+
+            blast_timer.Start();
         }
         private void Blast_Timer(object sender, EventArgs e)
         {
@@ -137,9 +134,15 @@ namespace AsteroidClicker
                 blastCurrentImage = 0;
                 GridBlastZone.Children.Remove(blastParticleImg);
                 blast_timer.Stop();
-                playingBlastAnimation = false;
             }
             else blastParticleImg.Source = new BitmapImage(new Uri(blastParticleImages[blastCurrentImage], UriKind.Relative));
+        }
+
+        private void ClearBlastParticle()
+        {
+            blastCurrentImage = 0;
+            GridBlastZone.Children.Remove(blastParticleImg);
+            blast_timer.Stop();
         }
 
         /*************************************************************************************************************************************
