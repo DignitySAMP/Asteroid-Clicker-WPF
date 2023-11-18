@@ -90,6 +90,7 @@ namespace AsteroidClicker
         private void AdjustInfoLabels()
         {
             LblAmount.Content = $"{Math.Floor(amountOfAsteroids)}";
+            this.Title = $"Asteroid Clicker ({LblAmount.Content} asteroids)";
         }
 
         /*************************************************************************************************************************************
