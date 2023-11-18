@@ -18,5 +18,42 @@
             </Grid>
             <Canvas Name="CanvasDropParticles" Width="125" Height="50"></Canvas>
         </StackPanel>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" >
+            <Grid Height="385" Width="270">
+                <Grid.Background>
+                    <ImageBrush ImageSource="assets/wall.png" Stretch="UniformToFill" Opacity="0.9"></ImageBrush>
+                </Grid.Background>
+
+                <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Top" Margin="30,30,0,0" Foreground="#6232a5" FontWeight="Bold" FontSize="20" FontFamily="AniMe Matrix - MB_EN">
+                    <Label.Effect>
+                        <DropShadowEffect ShadowDepth="2" Direction="310" BlurRadius="2"/>
+                    </Label.Effect>
+                    Upgrade Shop
+                </Label>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="30,0,0,0">
+                    <WrapPanel>
+                        <Button Name="BtnUpgrade1" Height="45" Width="64"  Margin="0,0,5,0">
+                            Upgrade 1
+                        </Button>
+                        <Button Name="BtnUpgrade2" Height="45" Width="64">
+                            Upgrade 2
+                        </Button>
+                    </WrapPanel>
+                    <WrapPanel Margin="0,10,0,0">
+                        <Button Name="BtnUpgrade3" Height="45" Width="64" Margin="0,0,5,0">
+                            Upgrade 3
+                        </Button>
+                        <Button Name="BtnUpgrade4" Height="45" Width="64">
+                            Upgrade 4
+                        </Button>
+                    </WrapPanel>
+                    <WrapPanel HorizontalAlignment="Center" Margin="0,10,0,0">
+                        <Button Name="BtnUpgrade5" Height="45" Width="64" >
+                            Upgrade 5
+                        </Button>
+                    </WrapPanel>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
     </Grid>
 </Window>

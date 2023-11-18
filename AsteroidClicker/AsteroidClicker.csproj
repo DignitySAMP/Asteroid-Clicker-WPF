@@ -121,6 +121,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="assets\audio\blaster.wav" />
+    <Resource Include="assets\wall.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
