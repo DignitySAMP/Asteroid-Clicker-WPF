@@ -23,7 +23,8 @@ namespace AsteroidClicker
     public partial class MainWindow : Window
     {
         // Global variables
-        int amountOfAsteroids = 0;
+        double amountOfAsteroids = 0.0; // Cookies
+        double amountOfScore = 0.0; // Score
 
         // Native functions
         public MainWindow()
@@ -46,7 +47,7 @@ namespace AsteroidClicker
             if (IsMouseInsideImage) // Check if the pointer is actually inside our image
             {
                 amountOfAsteroids++;
-                Console.WriteLine($"Debug: score: {amountOfAsteroids}");
+                amountOfScore++;
 
                 Random random = new Random();
                 ImgAsteroid.Width = random.Next(100, 120);
