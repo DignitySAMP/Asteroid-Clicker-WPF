@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Xml.Linq;
 
 namespace AsteroidClicker
 {
@@ -38,6 +39,8 @@ namespace AsteroidClicker
 
             blast_timer.Interval = TimeSpan.FromMilliseconds(25);
             blast_timer.Tick += Blast_Timer;
+
+            HandleUpgradeButtons(); // disable all buttons on runtime
         }
 
         bool IsMouseInsideImage = false;
@@ -91,6 +94,41 @@ namespace AsteroidClicker
         {
             LblAmount.Content = $"{Math.Floor(amountOfAsteroids)}";
             this.Title = $"Asteroid Clicker ({LblAmount.Content} asteroids)";
+
+            HandleUpgradeButtons(); // TODO: Make this automatically append when cookies are automatically harvested
+        }
+
+        /*************************************************************************************************************************************
+        **************************************************************************************************************************************
+        **************************************************************************************************************************************
+        **************************************************************************************************************************************/
+        // Shop/Upgrade system
+
+        private void HandleUpgradeButtons()
+        {
+            for (int i = 0; i < 5; i ++)
+            {
+                var UpgradeData = GetUpgradeData(i);
+                if (amountOfAsteroids >= UpgradeData.price)
+                {
+                    (UpgradeData.button).IsEnabled = true;
+                }
+                else (UpgradeData.button).IsEnabled = false;
+            }            
+        }
+
+        private (string name, string description, double price, double output, Button button) GetUpgradeData(int index)
+        {
+            var upgradeList = new (string, string, double, double, Button)[]
+            {
+               ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0, 0.1, BtnUpgrade1),
+               ("Mine Blaster",  "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0, 1.0, BtnUpgrade2),
+               ("Space Ship",  "Een extra space ship versneld de vluchten heen en terug.", 1100.0, 8.0, BtnUpgrade3),
+               ("Mining Colony",  "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0, 47.0, BtnUpgrade4),
+               ("Space Station",  "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0, 260.0, BtnUpgrade5),
+            };
+
+            return upgradeList[index];
         }
 
         /*************************************************************************************************************************************
