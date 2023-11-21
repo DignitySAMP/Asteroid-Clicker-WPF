@@ -23,11 +23,13 @@ namespace AsteroidClicker
     /// </summary>
     public partial class MainWindow : Window
     {
+        // TODO: Add a button for muting volume
+        #region Global Variables
         // Global variables
         double amountOfAsteroids = 0.0; // Cookies
         double amountOfScore = 0.0; // Score
-
-        // Native functions
+        #endregion
+        
         public MainWindow()
         {
             InitializeComponent();
@@ -43,6 +45,7 @@ namespace AsteroidClicker
             SetupUpgradeButtons(); // setup button design(s)
         }
 
+        #region Image Click Events
         bool IsMouseInsideImage = false;
         bool ValidMouseClick = false;
         private void ImgAsteroid_MouseDown(object sender, MouseButtonEventArgs e)
@@ -82,10 +85,8 @@ namespace AsteroidClicker
             IsMouseInsideImage = false;
             ValidMouseClick = false;
         }
-
-        /*************************************************************************************************************************************
-        **************************************************************************************************************************************/
-        // Custom functions
+        #endregion
+        #region Custom Functions
         private void MS_Timer(object sender, EventArgs e)
         {
             MoveFallingParticles();
@@ -97,13 +98,8 @@ namespace AsteroidClicker
 
             HandleUpgradeButtons(); // TODO: Make this automatically append when cookies are automatically harvested
         }
-
-        /*************************************************************************************************************************************
-        **************************************************************************************************************************************
-        **************************************************************************************************************************************
-        **************************************************************************************************************************************/
-        // Shop/Upgrade system
-
+        #endregion
+        #region Shop/Upgrade System
         static int MAX_UPGRADES = 5;
 
         int[] boughtUpgrades = new int[MAX_UPGRADES];
@@ -114,6 +110,8 @@ namespace AsteroidClicker
             {
                 var UpgradeData = GetUpgradeData(i);
 
+                UpgradeData.wrapper.Children.Clear();
+
                 // Setup button design
                 Image BtnImage = new Image();
                 BtnImage.Source = new BitmapImage(new Uri(UpgradeData.icon, UriKind.Relative));
@@ -122,6 +120,7 @@ namespace AsteroidClicker
                 UpgradeData.wrapper.Children.Add(BtnImage);
 
                 Label BtnName = new Label();
+                BtnName.HorizontalContentAlignment = HorizontalAlignment.Left;
                 StringBuilder btnInfo = new StringBuilder();
                 btnInfo.AppendLine(UpgradeData.name);
                 btnInfo.AppendLine($"Kost {UpgradeData.price} asteroids");
@@ -172,12 +171,62 @@ namespace AsteroidClicker
             return upgradeList[index];
         }
 
-        /*************************************************************************************************************************************
-        **************************************************************************************************************************************
-        **************************************************************************************************************************************
-        **************************************************************************************************************************************/
-        // Particle system (blast OnClick + falling particles)
+        private void BtnUpgrade_Click(object sender, RoutedEventArgs e) 
+        {
+            // TODO: Add an option to buy 1, buy 5, buy 10 or buy MAX of each option.
+            // Maybe make it show a panel with these options when you click on the button?
+            Button button = sender as Button;
+            ProcessUpgradePurchase(button); 
+        }
 
+        private void ProcessUpgradePurchase(Button button)
+        {
+            int specifier = GetIndexOfUpgrade(button);
+
+            if (specifier != -1)
+            {
+                var UpgradeData = GetUpgradeData(specifier);
+                if (UpgradeData.price <= amountOfAsteroids)
+                {
+                    amountOfAsteroids -= UpgradeData.price;
+                    boughtUpgrades[specifier]++;
+
+                    AdjustInfoLabels(); // update game labels (title/score)
+                    SetupUpgradeButtons(); // update button labels
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"Je hebt een {UpgradeData.name} gekocht voor {UpgradeData.price} asteroïden.");
+                    sb.AppendLine($"Je hebt nu nog {amountOfAsteroids} asteroïden over.");
+                    sb.AppendLine("");
+                    sb.AppendLine(UpgradeData.description);
+                    sb.AppendLine("");
+                    sb.AppendLine($"Automatische opbrengst: {UpgradeData.output}/seconde");
+
+                    ShowFadeMessage($"{UpgradeData.name} gekocht", sb.ToString());
+                }
+            }
+            else MessageBox.Show("Er is iets misgegaan met de upgrade. (Knop is niet geinitialiseerd)");
+        }
+
+        private int GetIndexOfUpgrade(Button button)
+        {
+            int specifier = -1;
+
+            for(int i = 0; i < MAX_UPGRADES; i ++)
+            {
+                var UpgradeData = GetUpgradeData(i);
+
+                if(button == UpgradeData.button)
+                {
+                    specifier = i;
+                    break;
+                }
+            }
+
+            return specifier;
+        }
+        #endregion
+        #region Particle System (Blast/Debris)
         // Blast Effect
         string[] blastParticleImages =
         {
@@ -232,10 +281,7 @@ namespace AsteroidClicker
             blast_timer.Stop();
         }
 
-        /*************************************************************************************************************************************
-        **************************************************************************************************************************************/
         // Dropping debris/particle effecft
-
         string[] fallingParticleImages =
         {
             "/assets/particles/drop/click_anim_0.png", "/assets/particles/drop/click_anim_1.png", "/assets/particles/drop/click_anim_2.png",
@@ -303,10 +349,34 @@ namespace AsteroidClicker
             }
             fallingParticleIndexes.Clear();
         }
+        #endregion
+        #region Custom Message System
 
-        /*************************************************************************************************************************************
-        **************************************************************************************************************************************
-        **************************************************************************************************************************************
-        **************************************************************************************************************************************/
+
+        private async void ShowFadeMessage(string title, string text)
+        {
+            LblUpdateTitle.Content = title;
+            LblUpdateText.Content = text;
+
+            StckMessageOverlay.Opacity = 0.0;
+            StckMessageOverlay.Visibility = Visibility.Visible;
+            while (StckMessageOverlay.Opacity <= 1.0)
+            {
+                await Task.Delay(20);
+                StckMessageOverlay.Opacity += 0.15;
+            }
+            StckMessageOverlay.Opacity = 1.0;
+
+            await Task.Delay(3500);
+
+            while (StckMessageOverlay.Opacity > 0.0)
+            {
+                await Task.Delay(20);
+                StckMessageOverlay.Opacity -= 0.15;
+            }
+            StckMessageOverlay.Opacity = 0.0;
+            StckMessageOverlay.Visibility = Visibility.Hidden;
+        }
+        #endregion
     }
 }

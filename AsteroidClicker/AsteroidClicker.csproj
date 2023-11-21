@@ -121,6 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="assets\audio\blaster.wav" />
+    <Resource Include="assets\black.png" />
     <Resource Include="assets\images\icons\thumb_astronaut.png" />
     <Resource Include="assets\images\icons\thumb_blaster.png" />
     <Resource Include="assets\images\icons\thumb_miningcolony.png" />
