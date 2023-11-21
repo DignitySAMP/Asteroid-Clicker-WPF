@@ -40,7 +40,7 @@ namespace AsteroidClicker
             blast_timer.Interval = TimeSpan.FromMilliseconds(25);
             blast_timer.Tick += Blast_Timer;
 
-            HandleUpgradeButtons(); // disable all buttons on runtime
+            SetupUpgradeButtons(); // setup button design(s)
         }
 
         bool IsMouseInsideImage = false;
@@ -104,28 +104,69 @@ namespace AsteroidClicker
         **************************************************************************************************************************************/
         // Shop/Upgrade system
 
-        private void HandleUpgradeButtons()
+        static int MAX_UPGRADES = 5;
+
+        int[] boughtUpgrades = new int[MAX_UPGRADES];
+
+        private void SetupUpgradeButtons()
         {
-            for (int i = 0; i < 5; i ++)
+            for (int i = 0; i < MAX_UPGRADES; i++)
             {
                 var UpgradeData = GetUpgradeData(i);
+
+                // Setup button design
+                Image BtnImage = new Image();
+                BtnImage.Source = new BitmapImage(new Uri(UpgradeData.icon, UriKind.Relative));
+                BtnImage.Width = 32;
+                BtnImage.Height = 32;
+                UpgradeData.wrapper.Children.Add(BtnImage);
+
+                Label BtnName = new Label();
+                StringBuilder btnInfo = new StringBuilder();
+                btnInfo.AppendLine(UpgradeData.name);
+                btnInfo.AppendLine($"Kost {UpgradeData.price} asteroids");
+                btnInfo.AppendLine($"{boughtUpgrades[i]} in bezit");
+                BtnName.HorizontalContentAlignment = HorizontalAlignment.Center;
+                BtnName.Content = btnInfo;
+                UpgradeData.wrapper.Children.Add(BtnName);
+            }
+            HandleUpgradeButtons(); // disable buttons
+        }
+
+        private void HandleUpgradeButtons()
+        {
+            StringBuilder buttonString = new StringBuilder();
+            for (int i = 0; i < MAX_UPGRADES; i ++)
+            {
+                var UpgradeData = GetUpgradeData(i);
+
+                // Add tooltip to buttons
+                buttonString.Clear();
+                buttonString.AppendLine($"{UpgradeData.name}");
+                buttonString.AppendLine($"{UpgradeData.description}");
+                buttonString.AppendLine($"");
+                buttonString.Append($"Opbrengst: +{UpgradeData.output}/seconde");
+                UpgradeData.button.ToolTip = buttonString.ToString();
+
+                // Enable/disable tooltip based on current asteroids
                 if (amountOfAsteroids >= UpgradeData.price)
                 {
                     (UpgradeData.button).IsEnabled = true;
                 }
                 else (UpgradeData.button).IsEnabled = false;
-            }            
+            }           
         }
 
-        private (string name, string description, double price, double output, Button button) GetUpgradeData(int index)
+        private (string name, string description, double price, double output, Button button, WrapPanel wrapper, string icon) GetUpgradeData(int index)
         {
-            var upgradeList = new (string, string, double, double, Button)[]
+            // TODO: Add exception for index out of bounds, maybe use an enum with constants?
+            var upgradeList = new (string, string, double, double, Button, WrapPanel, string)[]
             {
-               ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0, 0.1, BtnUpgrade1),
-               ("Mine Blaster",  "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0, 1.0, BtnUpgrade2),
-               ("Space Ship",  "Een extra space ship versneld de vluchten heen en terug.", 1100.0, 8.0, BtnUpgrade3),
-               ("Mining Colony",  "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0, 47.0, BtnUpgrade4),
-               ("Space Station",  "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0, 260.0, BtnUpgrade5),
+               ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0, 0.1, BtnUpgrade1, WrapBtnContent_1, "/assets/images/icons/thumb_astronaut.png"),
+               ("Mine Blaster",  "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0, 1.0, BtnUpgrade2, WrapBtnContent_2, "/assets/images/icons/thumb_blaster.png"),
+               ("Space Ship",  "Een extra space ship versneld de vluchten heen en terug.", 1100.0, 8.0, BtnUpgrade3, WrapBtnContent_3, "/assets/images/icons/thumb_rocket.png"),
+               ("Mining Colony",  "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0, 47.0, BtnUpgrade4, WrapBtnContent_4, "/assets/images/icons/thumb_miningcolony.png"),
+               ("Space Station",  "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0, 260.0, BtnUpgrade5, WrapBtnContent_5, "/assets/images/icons/thumb_spacestation.png"),
             };
 
             return upgradeList[index];

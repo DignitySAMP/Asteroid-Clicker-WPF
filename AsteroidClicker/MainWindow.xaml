@@ -31,27 +31,23 @@
                     Upgrade Shop
                 </Label>
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="30,0,0,0">
-                    <WrapPanel>
-                        <Button Name="BtnUpgrade1" Height="45" Width="64"  Margin="0,0,5,0">
-                            Upgrade 1
-                        </Button>
-                        <Button Name="BtnUpgrade2" Height="45" Width="64">
-                            Upgrade 2
-                        </Button>
-                    </WrapPanel>
-                    <WrapPanel Margin="0,10,0,0">
-                        <Button Name="BtnUpgrade3" Height="45" Width="64" Margin="0,0,5,0">
-                            Upgrade 3
-                        </Button>
-                        <Button Name="BtnUpgrade4" Height="45" Width="64">
-                            Upgrade 4
-                        </Button>
-                    </WrapPanel>
-                    <WrapPanel HorizontalAlignment="Center" Margin="0,10,0,0">
-                        <Button Name="BtnUpgrade5" Height="45" Width="64" >
-                            Upgrade 5
-                        </Button>
-                    </WrapPanel>
+
+                    <Button Name="BtnUpgrade1" Height="45" Width="200"  Margin="0,0,0,5">
+                        <WrapPanel Name="WrapBtnContent_1" HorizontalAlignment="Center"></WrapPanel>
+                    </Button>
+                    <Button Name="BtnUpgrade2" Height="45" Width="200" Margin="0,0,0,5">
+                        <WrapPanel Name="WrapBtnContent_2" HorizontalAlignment="Center"></WrapPanel>
+                    </Button>
+
+                    <Button Name="BtnUpgrade3" Height="45" Width="200" Margin="0,0,0,5">
+                        <WrapPanel Name="WrapBtnContent_3" HorizontalAlignment="Center"></WrapPanel>
+                    </Button>
+                    <Button Name="BtnUpgrade4" Height="45" Width="200" Margin="0,0,0,5">
+                        <WrapPanel Name="WrapBtnContent_4" HorizontalAlignment="Center"></WrapPanel>
+                    </Button>
+                    <Button Name="BtnUpgrade5" Height="45" Width="200" >
+                        <WrapPanel Name="WrapBtnContent_5" HorizontalAlignment="Center"></WrapPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </StackPanel>
