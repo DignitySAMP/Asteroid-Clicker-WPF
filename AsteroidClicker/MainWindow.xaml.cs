@@ -123,7 +123,7 @@ namespace AsteroidClicker
                 BtnName.HorizontalContentAlignment = HorizontalAlignment.Left;
                 StringBuilder btnInfo = new StringBuilder();
                 btnInfo.AppendLine(UpgradeData.name);
-                btnInfo.AppendLine($"Kost {UpgradeData.price} asteroids");
+                btnInfo.AppendLine($"Kost {DisplayUpgradePrice(i)} asteroids");
                 btnInfo.AppendLine($"{boughtUpgrades[i]} in bezit");
                 BtnName.HorizontalContentAlignment = HorizontalAlignment.Center;
                 BtnName.Content = btnInfo;
@@ -148,7 +148,7 @@ namespace AsteroidClicker
                 UpgradeData.button.ToolTip = buttonString.ToString();
 
                 // Enable/disable tooltip based on current asteroids
-                if (amountOfAsteroids >= UpgradeData.price)
+                if (amountOfAsteroids >= Math.Ceiling(GetUpgradePrice(i))) // ceil it here so they can't buy when button shows "18" (ceiled visually) but they have "17.X"
                 {
                     (UpgradeData.button).IsEnabled = true;
                 }
@@ -186,23 +186,23 @@ namespace AsteroidClicker
             if (specifier != -1)
             {
                 var UpgradeData = GetUpgradeData(specifier);
-                if (UpgradeData.price <= amountOfAsteroids)
+                if (GetUpgradePrice(specifier) <= amountOfAsteroids)
                 {
-                    amountOfAsteroids -= UpgradeData.price;
-                    boughtUpgrades[specifier]++;
-
-                    AdjustInfoLabels(); // update game labels (title/score)
-                    SetupUpgradeButtons(); // update button labels
+                    amountOfAsteroids -= GetUpgradePrice(specifier);
 
                     StringBuilder sb = new StringBuilder();
-                    sb.AppendLine($"Je hebt een {UpgradeData.name} gekocht voor {UpgradeData.price} asteroïden.");
-                    sb.AppendLine($"Je hebt nu nog {amountOfAsteroids} asteroïden over.");
+                    sb.AppendLine($"Je hebt een {UpgradeData.name} gekocht voor {DisplayUpgradePrice(specifier)} asteroïden.");
+                    sb.AppendLine($"Je hebt nu nog {Math.Floor(amountOfAsteroids)} asteroïden over.");
                     sb.AppendLine("");
                     sb.AppendLine(UpgradeData.description);
                     sb.AppendLine("");
                     sb.AppendLine($"Automatische opbrengst: {UpgradeData.output}/seconde");
 
                     ShowFadeMessage($"{UpgradeData.name} gekocht", sb.ToString());
+
+                    boughtUpgrades[specifier]++;
+                    AdjustInfoLabels(); // update game labels (title/score)
+                    SetupUpgradeButtons(); // update button labels
                 }
             }
             else MessageBox.Show("Er is iets misgegaan met de upgrade. (Knop is niet geinitialiseerd)");
@@ -225,9 +225,30 @@ namespace AsteroidClicker
 
             return specifier;
         }
+
+        private double GetUpgradePrice(int upgrade)
+        {
+            var UpgradeData = GetUpgradeData(upgrade);
+            double buy_price = UpgradeData.price * (1.15 * boughtUpgrades[upgrade]);
+            if(buy_price <= 0)
+            {
+                buy_price = UpgradeData.price;
+            }
+            return buy_price;
+        }
+
+        private string DisplayUpgradePrice(int upgrade)
+        {
+            string price;
+
+            price = $"{Math.Ceiling(GetUpgradePrice(upgrade))}";
+
+            return price;
+        }
+
         #endregion
         #region Particle System (Blast/Debris)
-        // Blast Effect
+            // Blast Effect
         string[] blastParticleImages =
         {
             "/assets/particles/blast/click_blast_0.png", "/assets/particles/blast/click_blast_1.png", "/assets/particles/blast/click_blast_2.png",
