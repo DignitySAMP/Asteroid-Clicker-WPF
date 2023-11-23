@@ -42,7 +42,7 @@ namespace AsteroidClicker
             blast_timer.Interval = TimeSpan.FromMilliseconds(25);
             blast_timer.Tick += Blast_Timer;
 
-            SetupUpgradeButtons(); // setup button design(s)
+            AdjustUpgradeButtons(); // setup button design(s)
         }
 
         #region Image Click Events
@@ -89,15 +89,19 @@ namespace AsteroidClicker
         #region Custom Functions
         private void MS_Timer(object sender, EventArgs e)
         {
-            MoveFallingParticles();
             ProcessUpgradeOutput();
+            UpdateVisuals();
+            MoveFallingParticles();
         }
         private void AdjustInfoLabels()
         {
             LblAmount.Content = $"{Math.Floor(amountOfAsteroids)}";
             this.Title = $"Asteroid Clicker ({LblAmount.Content} asteroids)";
-
-            HandleUpgradeButtons(); // TODO: Make this automatically append when cookies are automatically harvested
+        }
+        private void UpdateVisuals()
+        {
+            AdjustInfoLabels();
+            AdjustUpgradeButtons();
         }
         #endregion
         #region Shop/Upgrade System
@@ -105,7 +109,7 @@ namespace AsteroidClicker
 
         int[] boughtUpgrades = new int[MAX_UPGRADES];
 
-        private void SetupUpgradeButtons()
+        private void AdjustUpgradeButtons()
         {
             for (int i = 0; i < MAX_UPGRADES; i++)
             {
@@ -203,7 +207,7 @@ namespace AsteroidClicker
 
                     boughtUpgrades[specifier]++;
                     AdjustInfoLabels(); // update game labels (title/score)
-                    SetupUpgradeButtons(); // update button labels
+                    AdjustUpgradeButtons(); // update button labels
                 }
             }
             else MessageBox.Show("Er is iets misgegaan met de upgrade. (Knop is niet geinitialiseerd)");
@@ -248,7 +252,6 @@ namespace AsteroidClicker
         }
 
         #endregion
-
         #region Upgrade Effects
 
         private void ProcessUpgradeOutput()
@@ -266,7 +269,6 @@ namespace AsteroidClicker
         }
 
         #endregion
-
         #region Particle System (Blast/Debris)
         // Blast Effect
         string[] blastParticleImages =
