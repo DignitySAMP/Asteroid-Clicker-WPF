@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -26,10 +27,11 @@ namespace AsteroidClicker
         // TODO: Add a button for muting volume
         #region Global Variables
         // Global variables
-        double amountOfAsteroids = 0.0; // Cookies
-        double amountOfScore = 0.0; // Score
+        decimal amountOfAsteroids = 0.0M; // Cookies
+        decimal amountOfScore = 0.0M; // Score
+        decimal additionAmount = 1; // debug purposes
         #endregion
-        
+        #region MainWindow
         public MainWindow()
         {
             InitializeComponent();
@@ -49,7 +51,7 @@ namespace AsteroidClicker
 
             AdjustUpgradeButtons(); // setup button design(s)
         }
-
+        #endregion
         #region Image Click Events
         bool IsMouseInsideImage = false;
         bool ValidMouseClick = false;
@@ -57,7 +59,7 @@ namespace AsteroidClicker
         {
             if (IsMouseInsideImage) // Check if the pointer is actually inside our image
             {
-                amountOfAsteroids++;
+                amountOfAsteroids += additionAmount;
                 amountOfScore++;
 
                 AdjustInfoLabels();
@@ -93,9 +95,9 @@ namespace AsteroidClicker
         #endregion
         #region Cookies Per Second
 
-        private double GetCookiesPerSecond()
+        private decimal GetCookiesPerSecond()
         {
-            double amount = 0;
+            decimal amount = 0;
             for (int i = 0; i < MAX_UPGRADES; i++)
             {
                 var UpgradeData = GetUpgradeData(i);
@@ -117,7 +119,7 @@ namespace AsteroidClicker
                 Opacity = 1.0,
                 FontSize = 16,
                 FontWeight = FontWeights.Bold,
-                Content = $"{GetCookiesPerSecond()}/s",
+                Content = $"{FormatNumber(GetCookiesPerSecond())}/s",
                 Foreground = (Brush)brushConverter.ConvertFrom("#FF00c531"),
                 Width = CookiesPerSecondParticles.Width,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
@@ -184,13 +186,37 @@ namespace AsteroidClicker
         }
         private void AdjustInfoLabels()
         {
-            LblAmount.Content = $"{Math.Floor(amountOfAsteroids)}";
+            LblAmount.Content = $"{FormatNumber(Math.Floor(amountOfAsteroids))}";
             this.Title = $"Asteroid Clicker ({LblAmount.Content} asteroids)";
         }
         private void UpdateVisuals()
         {
             AdjustInfoLabels();
             AdjustUpgradeButtons();
+        }
+
+        private string FormatNumber(decimal input)
+        {
+            string number = input.ToString();
+            decimal[] numberArray = new decimal[] { 1000000, 1000000000, 1000000000000, 1000000000000000, 1000000000000000000 };
+            string[] numberName = new string[] { "miljoen", "miljard", "biljoen", "biljard", "triljoen" };
+
+            int caught_index = -1;
+            for (int i = 0; i < numberArray.Length; i++)
+            {
+                if (input >= numberArray[i])
+                {
+                    caught_index = i;
+                }
+            }
+
+            if (caught_index > -1)
+            {
+                string numberConcat = (input / numberArray[caught_index]).ToString("N2");
+                number = $" {numberConcat} {numberName[caught_index]}";
+            }
+
+            return number;
         }
         #endregion
         #region Shop/Upgrade System
@@ -250,16 +276,16 @@ namespace AsteroidClicker
             }           
         }
 
-        private (string name, string description, double price, double output, Button button, WrapPanel wrapper, string icon) GetUpgradeData(int index)
+        private (string name, string description, decimal price, decimal output, Button button, WrapPanel wrapper, string icon) GetUpgradeData(int index)
         {
             // TODO: Add exception for index out of bounds, maybe use an enum with constants?
-            var upgradeList = new (string, string, double, double, Button, WrapPanel, string)[]
+            var upgradeList = new (string, string, decimal, decimal, Button, WrapPanel, string)[]
             {
-               ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0, 0.001, BtnUpgrade1, WrapBtnContent_1, "/assets/images/icons/thumb_astronaut.png"),
-               ("Mine Blaster",  "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0, 0.01, BtnUpgrade2, WrapBtnContent_2, "/assets/images/icons/thumb_blaster.png"),
-               ("Space Ship",  "Een extra space ship versneld de vluchten heen en terug.", 1100.0, 0.08, BtnUpgrade3, WrapBtnContent_3, "/assets/images/icons/thumb_rocket.png"),
-               ("Mining Colony",  "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0, 0.47, BtnUpgrade4, WrapBtnContent_4, "/assets/images/icons/thumb_miningcolony.png"),
-               ("Space Station",  "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0, 2.60, BtnUpgrade5, WrapBtnContent_5, "/assets/images/icons/thumb_spacestation.png"),
+               ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0M, 0.001M, BtnUpgrade1, WrapBtnContent_1, "/assets/images/icons/thumb_astronaut.png"),
+               ("Mine Blaster",  "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0M, 0.01M, BtnUpgrade2, WrapBtnContent_2, "/assets/images/icons/thumb_blaster.png"),
+               ("Space Ship",  "Een extra space ship versneld de vluchten heen en terug.", 1100.0M, 0.08M, BtnUpgrade3, WrapBtnContent_3, "/assets/images/icons/thumb_rocket.png"),
+               ("Mining Colony",  "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0M, 0.47M, BtnUpgrade4, WrapBtnContent_4, "/assets/images/icons/thumb_miningcolony.png"),
+               ("Space Station",  "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0M, 2.60M, BtnUpgrade5, WrapBtnContent_5, "/assets/images/icons/thumb_spacestation.png"),
             };
 
             return upgradeList[index];
@@ -320,10 +346,10 @@ namespace AsteroidClicker
             return specifier;
         }
 
-        private double GetUpgradePrice(int upgrade)
+        private decimal GetUpgradePrice(int upgrade)
         {
             var UpgradeData = GetUpgradeData(upgrade);
-            double buy_price = UpgradeData.price * (1.15 * boughtUpgrades[upgrade]);
+            decimal buy_price = UpgradeData.price * (1.15M * boughtUpgrades[upgrade]);
             if(buy_price <= 0)
             {
                 buy_price = UpgradeData.price;
