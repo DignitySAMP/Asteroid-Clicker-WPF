@@ -68,5 +68,14 @@ namespace AsteroidClicker.Properties {
                 return ResourceManager.GetStream("blaster", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream passiveblast {
+            get {
+                return ResourceManager.GetStream("passiveblast", resourceCulture);
+            }
+        }
     }
 }

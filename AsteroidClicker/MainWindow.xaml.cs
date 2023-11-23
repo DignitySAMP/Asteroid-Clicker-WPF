@@ -39,6 +39,11 @@ namespace AsteroidClicker
             ms_timer.Tick += MS_Timer;
             ms_timer.Start();
 
+            DispatcherTimer s_timer = new DispatcherTimer();
+            s_timer.Interval = TimeSpan.FromSeconds(1);
+            s_timer.Tick += S_Timer;
+            s_timer.Start();
+
             blast_timer.Interval = TimeSpan.FromMilliseconds(25);
             blast_timer.Tick += Blast_Timer;
 
@@ -86,12 +91,96 @@ namespace AsteroidClicker
             ValidMouseClick = false;
         }
         #endregion
+        #region Cookies Per Second
+
+        private double GetCookiesPerSecond()
+        {
+            double amount = 0;
+            for (int i = 0; i < MAX_UPGRADES; i++)
+            {
+                var UpgradeData = GetUpgradeData(i);
+                if (boughtUpgrades[i] > 0)
+                {
+                    amount += (UpgradeData.output * boughtUpgrades[i]);
+                }
+            }
+            return (amount*100);
+        }
+
+        private async void ShowCookiesPerSecond()
+        {
+            if (GetCookiesPerSecond() <= 0) return;
+            Random random = new Random();
+            var brushConverter = new BrushConverter();
+            Label asteroidPerSecondGain = new Label
+            {
+                Opacity = 1.0,
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                Content = $"{GetCookiesPerSecond()}/s",
+                Foreground = (Brush)brushConverter.ConvertFrom("#FF00c531"),
+                Width = CookiesPerSecondParticles.Width,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                IsHitTestVisible = false
+            };
+            Canvas.SetTop(asteroidPerSecondGain, 50);
+
+            // Play a sound
+            var blastSound = new System.Media.SoundPlayer();
+            blastSound.Stop();
+            blastSound.Stream = AsteroidClicker.Properties.Resources.passiveblast;
+            blastSound.Play();
+
+            // Create blast on random position
+            Image smallBlastParticleImg = new Image
+            {
+                Source = new BitmapImage(new Uri(blastParticleImages[0], UriKind.Relative)),
+                Width = 32,
+                Height = 32,
+                IsHitTestVisible = false, // can click through image
+            };
+            Canvas.SetLeft(smallBlastParticleImg, random.Next(0, (int)CookiesPerSecondParticles.Width - 20));
+            Canvas.SetTop(smallBlastParticleImg, random.Next(16, 32));
+
+            // Blast animation
+            int smallBlastCurrentImage = 0;
+            CookiesPerSecondParticles.Children.Add(smallBlastParticleImg);
+            while (blastCurrentImage < blastParticleImages.Length)
+            {
+                await Task.Delay(60);
+                smallBlastCurrentImage++;
+                if (smallBlastCurrentImage >= blastParticleImages.Length) break;
+                else
+                {
+                    smallBlastParticleImg.Source = new BitmapImage(new Uri(blastParticleImages[smallBlastCurrentImage], UriKind.Relative));
+                }
+            }
+            CookiesPerSecondParticles.Children.Remove(smallBlastParticleImg);
+
+            // Label animation
+            double temp_pos_y = 50;
+            CookiesPerSecondParticles.Children.Add(asteroidPerSecondGain);
+            while (temp_pos_y > -30 || asteroidPerSecondGain.Opacity > 0.0)
+            {
+                await Task.Delay(15);
+                asteroidPerSecondGain.Opacity -= 0.01;
+                await Task.Delay(30);
+                temp_pos_y--;
+                Canvas.SetTop(asteroidPerSecondGain, temp_pos_y);
+            }
+            CookiesPerSecondParticles.Children.Remove(asteroidPerSecondGain);
+        }
+        #endregion
         #region Custom Functions
         private void MS_Timer(object sender, EventArgs e)
         {
             ProcessUpgradeOutput();
             UpdateVisuals();
             MoveFallingParticles();
+        }
+        private void S_Timer(object sender, EventArgs e)
+        {
+            ShowCookiesPerSecond();
         }
         private void AdjustInfoLabels()
         {

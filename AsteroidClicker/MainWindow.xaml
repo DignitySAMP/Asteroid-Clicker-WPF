@@ -15,6 +15,7 @@
             <Label Name="LblAmount" Content="0" HorizontalContentAlignment="Center" Foreground="#FFF"></Label>
             <Grid Name="GridBlastZone">
                 <Image Name="ImgAsteroid" Source="assets/asteroid.png" Height="128" Width="128" MouseDown="ImgAsteroid_MouseDown" MouseUp="ImgAsteroid_MouseUp" MouseLeave="ImgAsteroid_MouseLeave" MouseEnter="ImgAsteroid_MouseEnter"></Image>
+                <Canvas VerticalAlignment="Top" Name="CookiesPerSecondParticles" Width="125" Height="75"></Canvas>
             </Grid>
             <Canvas Name="CanvasDropParticles" Width="125" Height="50"></Canvas>
         </StackPanel>
