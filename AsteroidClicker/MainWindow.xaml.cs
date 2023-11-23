@@ -90,6 +90,7 @@ namespace AsteroidClicker
         private void MS_Timer(object sender, EventArgs e)
         {
             MoveFallingParticles();
+            ProcessUpgradeOutput();
         }
         private void AdjustInfoLabels()
         {
@@ -144,7 +145,7 @@ namespace AsteroidClicker
                 buttonString.AppendLine($"{UpgradeData.name}");
                 buttonString.AppendLine($"{UpgradeData.description}");
                 buttonString.AppendLine($"");
-                buttonString.Append($"Opbrengst: +{UpgradeData.output}/seconde");
+                buttonString.Append($"Opbrengst: +{UpgradeData.output * 100}/seconde");
                 UpgradeData.button.ToolTip = buttonString.ToString();
 
                 // Enable/disable tooltip based on current asteroids
@@ -161,11 +162,11 @@ namespace AsteroidClicker
             // TODO: Add exception for index out of bounds, maybe use an enum with constants?
             var upgradeList = new (string, string, double, double, Button, WrapPanel, string)[]
             {
-               ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0, 0.1, BtnUpgrade1, WrapBtnContent_1, "/assets/images/icons/thumb_astronaut.png"),
-               ("Mine Blaster",  "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0, 1.0, BtnUpgrade2, WrapBtnContent_2, "/assets/images/icons/thumb_blaster.png"),
-               ("Space Ship",  "Een extra space ship versneld de vluchten heen en terug.", 1100.0, 8.0, BtnUpgrade3, WrapBtnContent_3, "/assets/images/icons/thumb_rocket.png"),
-               ("Mining Colony",  "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0, 47.0, BtnUpgrade4, WrapBtnContent_4, "/assets/images/icons/thumb_miningcolony.png"),
-               ("Space Station",  "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0, 260.0, BtnUpgrade5, WrapBtnContent_5, "/assets/images/icons/thumb_spacestation.png"),
+               ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0, 0.001, BtnUpgrade1, WrapBtnContent_1, "/assets/images/icons/thumb_astronaut.png"),
+               ("Mine Blaster",  "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0, 0.01, BtnUpgrade2, WrapBtnContent_2, "/assets/images/icons/thumb_blaster.png"),
+               ("Space Ship",  "Een extra space ship versneld de vluchten heen en terug.", 1100.0, 0.08, BtnUpgrade3, WrapBtnContent_3, "/assets/images/icons/thumb_rocket.png"),
+               ("Mining Colony",  "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0, 0.47, BtnUpgrade4, WrapBtnContent_4, "/assets/images/icons/thumb_miningcolony.png"),
+               ("Space Station",  "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0, 2.60, BtnUpgrade5, WrapBtnContent_5, "/assets/images/icons/thumb_spacestation.png"),
             };
 
             return upgradeList[index];
@@ -196,7 +197,7 @@ namespace AsteroidClicker
                     sb.AppendLine("");
                     sb.AppendLine(UpgradeData.description);
                     sb.AppendLine("");
-                    sb.AppendLine($"Automatische opbrengst: {UpgradeData.output}/seconde");
+                    sb.AppendLine($"Automatische opbrengst: {UpgradeData.output*100}/seconde");
 
                     ShowFadeMessage($"{UpgradeData.name} gekocht", sb.ToString());
 
@@ -247,8 +248,27 @@ namespace AsteroidClicker
         }
 
         #endregion
+
+        #region Upgrade Effects
+
+        private void ProcessUpgradeOutput()
+        {
+            for(int i = 0; i < MAX_UPGRADES; i ++)
+            {
+                var UpgradeData = GetUpgradeData(i);
+                if (boughtUpgrades[i] > 0)
+                {
+                    amountOfAsteroids += (UpgradeData.output * boughtUpgrades[i]);
+                    Console.WriteLine($"[{UpgradeData.name}] Adding {UpgradeData.output * boughtUpgrades[i]} (default: {UpgradeData.output}) for index {i}, new amount: {amountOfAsteroids}");
+                    AdjustInfoLabels(); 
+                }
+            }
+        }
+
+        #endregion
+
         #region Particle System (Blast/Debris)
-            // Blast Effect
+        // Blast Effect
         string[] blastParticleImages =
         {
             "/assets/particles/blast/click_blast_0.png", "/assets/particles/blast/click_blast_1.png", "/assets/particles/blast/click_blast_2.png",
