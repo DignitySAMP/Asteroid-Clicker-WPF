@@ -197,7 +197,10 @@ namespace AsteroidClicker
 
         private string FormatNumber(decimal input)
         {
-            string number = input.ToString();
+            var digitFormat = new NumberFormatInfo { 
+                NumberGroupSeparator = " ",
+            };
+            string number = input.ToString("#,0", digitFormat);
             decimal[] numberArray = new decimal[] { 1000000, 1000000000, 1000000000000, 1000000000000000, 1000000000000000000 };
             string[] numberName = new string[] { "miljoen", "miljard", "biljoen", "biljard", "triljoen" };
 
