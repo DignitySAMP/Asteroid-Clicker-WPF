@@ -48,8 +48,14 @@
                         <Button Name="BtnUpgrade4" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click">
                             <WrapPanel Name="WrapBtnContent_4"></WrapPanel>
                         </Button>
-                        <Button Name="BtnUpgrade5" Height="60" Width="200" Click="BtnUpgrade_Click" >
+                        <Button Name="BtnUpgrade5" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click" >
                             <WrapPanel Name="WrapBtnContent_5"></WrapPanel>
+                        </Button>
+                        <Button Name="BtnUpgrade6" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click" >
+                            <WrapPanel Name="WrapBtnContent_6"></WrapPanel>
+                        </Button>
+                        <Button Name="BtnUpgrade7" Height="60" Width="200" Click="BtnUpgrade_Click" >
+                            <WrapPanel Name="WrapBtnContent_7"></WrapPanel>
                         </Button>
                     </StackPanel>
                 </ScrollViewer>

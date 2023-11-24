@@ -223,7 +223,7 @@ namespace AsteroidClicker
         }
         #endregion
         #region Shop/Upgrade System
-        static int MAX_UPGRADES = 5;
+        static int MAX_UPGRADES = 7;
 
         int[] boughtUpgrades = new int[MAX_UPGRADES];
 
@@ -284,11 +284,13 @@ namespace AsteroidClicker
             // TODO: Add exception for index out of bounds, maybe use an enum with constants?
             var upgradeList = new (string, string, decimal, decimal, Button, WrapPanel, string)[]
             {
-               ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0M, 0.001M, BtnUpgrade1, WrapBtnContent_1, "/assets/images/icons/thumb_astronaut.png"),
-               ("Mine Blaster",  "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0M, 0.01M, BtnUpgrade2, WrapBtnContent_2, "/assets/images/icons/thumb_blaster.png"),
-               ("Space Ship",  "Een extra space ship versneld de vluchten heen en terug.", 1100.0M, 0.08M, BtnUpgrade3, WrapBtnContent_3, "/assets/images/icons/thumb_rocket.png"),
-               ("Mining Colony",  "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0M, 0.47M, BtnUpgrade4, WrapBtnContent_4, "/assets/images/icons/thumb_miningcolony.png"),
-               ("Space Station",  "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0M, 2.60M, BtnUpgrade5, WrapBtnContent_5, "/assets/images/icons/thumb_spacestation.png"),
+                ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0M, 0.001M, BtnUpgrade1, WrapBtnContent_1, "/assets/images/icons/thumb_astronaut.png"),
+                ("Mine Blaster",  "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0M, 0.01M, BtnUpgrade2, WrapBtnContent_2, "/assets/images/icons/thumb_blaster.png"),
+                ("Space Ship",  "Een extra space ship versneld de vluchten heen en terug.", 1100.0M, 0.08M, BtnUpgrade3, WrapBtnContent_3, "/assets/images/icons/thumb_rocket.png"),
+                ("Mining Colony",  "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0M, 0.47M, BtnUpgrade4, WrapBtnContent_4, "/assets/images/icons/thumb_miningcolony.png"),
+                ("Space Station",  "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0M, 2.60M, BtnUpgrade5, WrapBtnContent_5, "/assets/images/icons/thumb_spacestation.png"),
+                ("Hired Alien",  "Een aliense huurling heeft buitenaardse technologie om meer te minen.", 1400000.0M, 14.00M, BtnUpgrade6, WrapBtnContent_6, "/assets/images/icons/thumb_alien.png"),
+                ("Space Station",  "De nieuwste technology van de Galactic Empire: een laser schietende planeet.", 20000000.0M, 78.00M, BtnUpgrade7, WrapBtnContent_7, "/assets/images/icons/thumb_deathstar.png"),
             };
 
             return upgradeList[index];
@@ -362,10 +364,12 @@ namespace AsteroidClicker
 
         private string DisplayUpgradePrice(int upgrade)
         {
-            string price;
-
-            price = $"{Math.Ceiling(GetUpgradePrice(upgrade))}";
-
+            var digitFormat = new NumberFormatInfo
+            {
+                NumberGroupSeparator = " ",
+            };
+            string price = Math.Ceiling(GetUpgradePrice(upgrade)).ToString("#,0", digitFormat);
+    
             return price;
         }
 
