@@ -1,21 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
-using System.Xml.Linq;
+using Microsoft.VisualBasic;
 
 namespace AsteroidClicker
 {
@@ -516,8 +510,6 @@ namespace AsteroidClicker
         }
         #endregion
         #region Custom Message System
-
-
         private async void ShowFadeMessage(string title, string text)
         {
             LblUpdateTitle.Content = title;
@@ -541,6 +533,23 @@ namespace AsteroidClicker
             }
             StckMessageOverlay.Opacity = 0.0;
             StckMessageOverlay.Visibility = Visibility.Hidden;
+        }
+        #endregion
+        #region Miner Namechanging
+        private void LblMinerName_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Voer de gewenste naam van de miner in.");
+            sb.AppendLine("");
+            sb.Append("Opgelet: het veld mag niet leeg zijn of spaties bevatten.");
+
+            string inputName = Interaction.InputBox(sb.ToString(), "Verander de naam", LblMinerName.Content.ToString());
+            if(inputName != null || inputName.Contains(" "))
+            {
+                ShowFadeMessage("Verandering van naam mislukt", "De nieuwe naam mag niet leeg zijn en mag geen spaties bevatten!");
+                return;
+            }
+            LblMinerName.Content = inputName;
         }
         #endregion
     }

@@ -12,10 +12,13 @@
             <ImageBrush ImageSource="assets/bg.png" Stretch="UniformToFill"></ImageBrush>
         </Grid.Background>
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-            <Label Name="LblMinerName" Content="PXL Asteroid Miner" HorizontalContentAlignment="Center" Foreground="#FF942aff" FontWeight="Bold" FontSize="16">
+            <Label Name="LblMinerName" Content="PXL-Asteroid-Miner" HorizontalContentAlignment="Center" Foreground="#FF942aff" FontWeight="Bold" FontSize="16" MouseDoubleClick="LblMinerName_MouseDoubleClick">
                 <Label.Effect>
                     <DropShadowEffect Color="#999" BlurRadius="5" ShadowDepth="2" Direction="300"/>
                 </Label.Effect>
+                <Label.ToolTip>
+                    Dubbel klik op de naam om deze te wijzigen.
+                </Label.ToolTip>
             </Label>
             <Label Name="LblAmount" Content="0" HorizontalContentAlignment="Center" Foreground="#FFF"></Label>
             <Grid Name="GridBlastZone">
