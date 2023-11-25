@@ -556,7 +556,6 @@ namespace AsteroidClicker
         #endregion
         #region Categories
         // Dependant on upgrade index.
-
         string[] categoryImages =
         {
             "/assets/images/categories/surface_1.png", "/assets/images/categories/surface_2.png", "/assets/images/categories/surface_3.png",
@@ -569,6 +568,15 @@ namespace AsteroidClicker
             ScrollCategories.Visibility = Visibility.Visible; // only shown after purchase
             StckCategories.Children.Clear();
 
+            Viewbox viewbox = new Viewbox
+            {
+                MaxWidth = 1000,
+            };
+            StackPanel stackpanel = new StackPanel
+            {
+                Width = 500
+            };
+
             for (int i = 0; i < categoryImages.Length; i++)
             {
                 if (boughtUpgrades[i] <= 0) continue; // skip creation incase no bought upgrades
@@ -577,14 +585,14 @@ namespace AsteroidClicker
                 {
                     Margin = new Thickness
                     {
-                        Top = 0,
-                        Left = 0,
-                        Right = 0,
+                        Top = 5,
+                        Left = 10,
+                        Right = 10,
                         Bottom = 5
                     },
-                    Height = 100
+                    Height = 150,
                 };
-                StckCategories.Children.Add(categoryWrapper);
+                stackpanel.Children.Add(categoryWrapper);
 
                 ImageBrush categoryImg = new ImageBrush
                 {
@@ -596,7 +604,8 @@ namespace AsteroidClicker
 
                 SpawnCategoryTiles(categoryWrapper, i);
             }
-
+            StckCategories.Children.Add(viewbox);
+            viewbox.Child = stackpanel;
         }
         string[] categoryTiles =
         {
@@ -614,7 +623,12 @@ namespace AsteroidClicker
  
             WrapPanel tileContent = new WrapPanel
             {
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness
+                {
+                    Top = 10,
+                    Bottom = 10
+                }
             };
 
             for (int i = 0; i < boughtUpgrades[index]; i ++)
@@ -622,8 +636,8 @@ namespace AsteroidClicker
                 Image tileIcon = new Image
                 {
                     Source = new BitmapImage(new Uri(categoryTiles[index], UriKind.Relative)),
-                    Width = 45,
-                    Height = 45
+                    Width = 96,
+                    Height = 96
                 };
 
                 tileContent.Children.Add(tileIcon);
@@ -634,7 +648,7 @@ namespace AsteroidClicker
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
                 Content = tileContent,
-                Height = 100
+                Height = 150
             };
 
             panel.Children.Add(categoryScroller);

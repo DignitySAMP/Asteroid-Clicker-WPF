@@ -5,7 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AsteroidClicker"
         mc:Ignorable="d"
-        ResizeMode="NoResize"
         Title="AsteroidClicker" Height="400" Width="800">
     <Grid>
         <Grid.Background>
@@ -21,15 +20,17 @@
         </Grid.RowDefinitions>
         <!-- #region Category Panel -->
         <ScrollViewer Name="ScrollCategories" VerticalScrollBarVisibility="Auto">
-            <StackPanel Name="StckCategories" Grid.Column="0" Margin="5">
+            <StackPanel Name="StckCategories" Margin="5">
                 <StackPanel.Background>
                     <SolidColorBrush Color="Black" Opacity="0.8"></SolidColorBrush>
                 </StackPanel.Background>
+
             </StackPanel>
         </ScrollViewer>
         <!-- #endregion -->
         <!--#region Playing Panel-->
-        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+        <Viewbox Grid.Column="1" Margin="25" >
+            <StackPanel VerticalAlignment="Center">
             <Label Name="LblMinerName" Content="PXL-Asteroid-Miner" HorizontalContentAlignment="Center" Foreground="#FF942aff" FontWeight="Bold" FontSize="16" MouseDoubleClick="LblMinerName_MouseDoubleClick">
                 <Label.Effect>
                     <DropShadowEffect Color="#999" BlurRadius="5" ShadowDepth="2" Direction="300"/>
@@ -45,59 +46,63 @@
             </Grid>
             <Canvas Name="CanvasDropParticles" Width="125" Height="50"></Canvas>
         </StackPanel>
-
+        </Viewbox>
         <!--#endregion -->
         <!-- #region Shop Panel -->
         <StackPanel Grid.Column="2">
             <StackPanel.Background>
                 <ImageBrush ImageSource="assets/wall.png" Stretch="UniformToFill" Opacity="0.9"></ImageBrush>
             </StackPanel.Background>
+            <Viewbox>
+                <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Top" Margin="30,30,0,0" Foreground="#6232a5" FontWeight="Bold" FontSize="20" FontFamily="AniMe Matrix - MB_EN">
+                    <Label.Effect>
+                        <DropShadowEffect ShadowDepth="2" Direction="310" BlurRadius="2"/>
+                    </Label.Effect>
+                    Upgrade Shop
+                </Label>
+            </Viewbox>
+            <Viewbox>
+                <ScrollViewer Margin="0,10,5,0" HorizontalScrollBarVisibility="Disabled" Height="265">
+                    <StackPanel Margin="35,0,5,0">
+                        <Button Name="BtnUpgrade1" Height="60" Width="200"  Margin="0,0,0,5" Click="BtnUpgrade_Click">
+                            <WrapPanel Name="WrapBtnContent_1"></WrapPanel>
+                        </Button>
+                        <Button Name="BtnUpgrade2" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click">
+                            <WrapPanel Name="WrapBtnContent_2"></WrapPanel>
+                        </Button>
 
-            <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Top" Margin="30,30,0,0" Foreground="#6232a5" FontWeight="Bold" FontSize="20" FontFamily="AniMe Matrix - MB_EN">
-                <Label.Effect>
-                    <DropShadowEffect ShadowDepth="2" Direction="310" BlurRadius="2"/>
-                </Label.Effect>
-                Upgrade Shop
-            </Label>
-
-            <ScrollViewer Margin="0,25,0,0" HorizontalScrollBarVisibility="Disabled" Height="240">
-                <StackPanel Margin="30,0,0,0">
-                    <Button Name="BtnUpgrade1" Height="60" Width="200"  Margin="0,0,0,5" Click="BtnUpgrade_Click">
-                        <WrapPanel Name="WrapBtnContent_1"></WrapPanel>
-                    </Button>
-                    <Button Name="BtnUpgrade2" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click">
-                        <WrapPanel Name="WrapBtnContent_2"></WrapPanel>
-                    </Button>
-
-                    <Button Name="BtnUpgrade3" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click">
-                        <WrapPanel Name="WrapBtnContent_3"></WrapPanel>
-                    </Button>
-                    <Button Name="BtnUpgrade4" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click">
-                        <WrapPanel Name="WrapBtnContent_4"></WrapPanel>
-                    </Button>
-                    <Button Name="BtnUpgrade5" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click" >
-                        <WrapPanel Name="WrapBtnContent_5"></WrapPanel>
-                    </Button>
-                    <Button Name="BtnUpgrade6" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click" >
-                        <WrapPanel Name="WrapBtnContent_6"></WrapPanel>
-                    </Button>
-                    <Button Name="BtnUpgrade7" Height="60" Width="200" Click="BtnUpgrade_Click" >
-                        <WrapPanel Name="WrapBtnContent_7"></WrapPanel>
-                    </Button>
-                </StackPanel>
-            </ScrollViewer>
+                        <Button Name="BtnUpgrade3" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click">
+                            <WrapPanel Name="WrapBtnContent_3"></WrapPanel>
+                        </Button>
+                        <Button Name="BtnUpgrade4" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click">
+                            <WrapPanel Name="WrapBtnContent_4"></WrapPanel>
+                        </Button>
+                        <Button Name="BtnUpgrade5" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click" >
+                            <WrapPanel Name="WrapBtnContent_5"></WrapPanel>
+                        </Button>
+                        <Button Name="BtnUpgrade6" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click" >
+                            <WrapPanel Name="WrapBtnContent_6"></WrapPanel>
+                        </Button>
+                        <Button Name="BtnUpgrade7" Height="60" Width="200" Click="BtnUpgrade_Click" >
+                            <WrapPanel Name="WrapBtnContent_7"></WrapPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </Viewbox>
         </StackPanel>
+
         <!-- #endregion -->
         <!--#region MessageBox Panel-->
         <StackPanel Grid.ColumnSpan="3" Visibility="Hidden" VerticalAlignment="Center" HorizontalAlignment="Center" Name="StckMessageOverlay" Opacity="1">
             <Grid>
-                <Image Source="assets/black.png" Stretch="UniformToFill" Height="230" Width="{Binding SystemParameters.PrimaryScreenWidth}"></Image>
-                <Label Name="LblUpdateTitle" HorizontalContentAlignment="Center" VerticalContentAlignment="Top" Margin="0,10,0,0" Foreground="White" FontSize="24">
-                    Test
-                </Label>
-                <Label Name="LblUpdateText" Foreground="White" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-                    Points here
-                </Label>
+                <Image Source="assets/black.png" Stretch="UniformToFill" Height="250" Width="{Binding SystemParameters.PrimaryScreenWidth}"></Image>
+
+                <Viewbox VerticalAlignment="Top" MaxHeight="250">
+                    <StackPanel Margin="25">
+                        <Label Name="LblUpdateTitle" HorizontalContentAlignment="Center" Foreground="White" FontSize="24"></Label>
+                        <Label Name="LblUpdateText" Foreground="White" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"></Label>
+                    </StackPanel>
+                </Viewbox>
             </Grid>
         </StackPanel>
         <!--#endregion-->
