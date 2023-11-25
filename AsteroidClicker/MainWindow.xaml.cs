@@ -629,7 +629,15 @@ namespace AsteroidClicker
                 tileContent.Children.Add(tileIcon);
             }
 
-            panel.Children.Add(tileContent);
+            ScrollViewer categoryScroller = new ScrollViewer
+            {
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
+                Content = tileContent,
+                Height = 100
+            };
+
+            panel.Children.Add(categoryScroller);
         }
         #endregion
     }
