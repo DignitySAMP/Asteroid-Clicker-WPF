@@ -323,6 +323,7 @@ namespace AsteroidClicker
                     boughtUpgrades[specifier]++;
                     AdjustInfoLabels(); // update game labels (title/score)
                     AdjustUpgradeButtons(); // update button labels
+                    AdjustCategories(); // update categories
                 }
             }
             else MessageBox.Show("Er is iets misgegaan met de upgrade. (Knop is niet geinitialiseerd)");
@@ -555,18 +556,24 @@ namespace AsteroidClicker
         #endregion
         #region Categories
         // Dependant on upgrade index.
+
         string[] categoryImages =
         {
             "/assets/images/categories/surface_1.png", "/assets/images/categories/surface_2.png", "/assets/images/categories/surface_3.png",
             "/assets/images/categories/surface_4.png", "/assets/images/categories/surface_5.png", "/assets/images/categories/surface_6.png",
             "/assets/images/categories/surface_7.png"
         };
-        private void SetupCategories()
+
+        private void AdjustCategories()
         {
-            for(int i = 0; i < categoryImages.Length; i++)
+            ScrollCategories.Visibility = Visibility.Visible; // only shown after purchase
+            StckCategories.Children.Clear();
+
+            for (int i = 0; i < categoryImages.Length; i++)
             {
-                WrapPanel categoryWrapper = new WrapPanel();
-                Image categoryImg = new Image
+                if (boughtUpgrades[i] <= 0) continue; // skip creation incase no bought upgrades
+
+                WrapPanel categoryWrapper = new WrapPanel
                 {
                     Margin = new Thickness
                     {
@@ -575,14 +582,54 @@ namespace AsteroidClicker
                         Right = 0,
                         Bottom = 5
                     },
-                    Source = new BitmapImage(new Uri(categoryImages[i], UriKind.Relative)),
-                    Height = 100,
+                    Height = 100
+                };
+                StckCategories.Children.Add(categoryWrapper);
+
+                ImageBrush categoryImg = new ImageBrush
+                {
+                    ImageSource = new BitmapImage(new Uri($"pack://application:,,,{categoryImages[i]}")),
                     Stretch = Stretch.UniformToFill,
+                    Opacity = 0.5
+                };
+                categoryWrapper.Background = categoryImg;
+
+                SpawnCategoryTiles(categoryWrapper, i);
+            }
+
+        }
+        string[] categoryTiles =
+        {
+            "/assets/images/icons_big/upgrade_astronaut.png",
+            "/assets/images/icons_big/upgrade_blaster.png",
+            "/assets/images/icons_big/upgrade_rocket.png",
+            "/assets/images/icons_big/upgrade_miningcolony.png",
+            "/assets/images/icons_big/upgrade_spacestation.png",
+            "/assets/images/icons_big/upgrade_ufo.png",
+            "/assets/images/icons_big/upgrade_deathstar.png"
+        };
+
+        private void SpawnCategoryTiles(WrapPanel panel, int index) // index = category
+        {
+ 
+            WrapPanel tileContent = new WrapPanel
+            {
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            for (int i = 0; i < boughtUpgrades[index]; i ++)
+            {
+                Image tileIcon = new Image
+                {
+                    Source = new BitmapImage(new Uri(categoryTiles[index], UriKind.Relative)),
+                    Width = 45,
+                    Height = 45
                 };
 
-                categoryWrapper.Children.Add(categoryImg);
-                StckCategories.Children.Add(categoryWrapper);
+                tileContent.Children.Add(tileIcon);
             }
+
+            panel.Children.Add(tileContent);
         }
         #endregion
     }

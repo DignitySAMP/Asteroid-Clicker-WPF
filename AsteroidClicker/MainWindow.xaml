@@ -20,7 +20,7 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <!-- #region Category Panel -->
-        <ScrollViewer Name="ScrollCategories">
+        <ScrollViewer Name="ScrollCategories" VerticalScrollBarVisibility="Auto">
             <StackPanel Name="StckCategories" Grid.Column="0" Margin="5">
                 <StackPanel.Background>
                     <SolidColorBrush Color="Black" Opacity="0.8"></SolidColorBrush>
