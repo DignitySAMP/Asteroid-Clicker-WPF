@@ -44,6 +44,7 @@ namespace AsteroidClicker
             blast_timer.Tick += Blast_Timer;
 
             AdjustUpgradeButtons(); // setup button design(s)
+            ScrollCategories.Visibility = Visibility.Hidden; // only shown after purchase
         }
         #endregion
         #region Image Click Events
@@ -550,6 +551,38 @@ namespace AsteroidClicker
                 return;
             }
             LblMinerName.Content = inputName;
+        }
+        #endregion
+        #region Categories
+        // Dependant on upgrade index.
+        string[] categoryImages =
+        {
+            "/assets/images/categories/surface_1.png", "/assets/images/categories/surface_2.png", "/assets/images/categories/surface_3.png",
+            "/assets/images/categories/surface_4.png", "/assets/images/categories/surface_5.png", "/assets/images/categories/surface_6.png",
+            "/assets/images/categories/surface_7.png"
+        };
+        private void SetupCategories()
+        {
+            for(int i = 0; i < categoryImages.Length; i++)
+            {
+                WrapPanel categoryWrapper = new WrapPanel();
+                Image categoryImg = new Image
+                {
+                    Margin = new Thickness
+                    {
+                        Top = 0,
+                        Left = 0,
+                        Right = 0,
+                        Bottom = 5
+                    },
+                    Source = new BitmapImage(new Uri(categoryImages[i], UriKind.Relative)),
+                    Height = 100,
+                    Stretch = Stretch.UniformToFill,
+                };
+
+                categoryWrapper.Children.Add(categoryImg);
+                StckCategories.Children.Add(categoryWrapper);
+            }
         }
         #endregion
     }

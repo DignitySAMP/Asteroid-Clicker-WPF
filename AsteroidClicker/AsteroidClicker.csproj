@@ -123,6 +123,13 @@
   <ItemGroup>
     <Content Include="assets\audio\blaster.wav" />
     <Content Include="assets\audio\passiveblast.wav" />
+    <Resource Include="assets\images\categories\surface_6.png" />
+    <Resource Include="assets\images\categories\surface_7.png" />
+    <Resource Include="assets\images\categories\surface_1.png" />
+    <Resource Include="assets\images\categories\surface_2.png" />
+    <Resource Include="assets\images\categories\surface_3.png" />
+    <Resource Include="assets\images\categories\surface_4.png" />
+    <Resource Include="assets\images\categories\surface_5.png" />
     <Resource Include="assets\images\icons\thumb_alien.png" />
     <Resource Include="assets\images\icons\thumb_deathstar.png" />
     <Resource Include="assets\black.png" />
