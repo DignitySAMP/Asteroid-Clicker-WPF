@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.VisualBasic;
@@ -23,7 +24,7 @@ namespace AsteroidClicker
         // Global variables
         decimal amountOfAsteroids = 0.0M; // Cookies
         decimal amountOfScore = 0.0M; // Score
-        decimal additionAmount = 1; // debug purposes
+        decimal additionAmount = 1; // debug purposes (default: 1) 
         #endregion
         #region MainWindow
         public MainWindow()
@@ -42,9 +43,9 @@ namespace AsteroidClicker
 
             blast_timer.Interval = TimeSpan.FromMilliseconds(25);
             blast_timer.Tick += Blast_Timer;
-
-            AdjustUpgradeButtons(); // setup button design(s)
+            
             ScrollCategories.Visibility = Visibility.Hidden; // only shown after purchase
+            StckUpgrades.Visibility = Visibility.Hidden; // only show after unlock
         }
         #endregion
         #region Image Click Events
@@ -55,7 +56,7 @@ namespace AsteroidClicker
             if (IsMouseInsideImage) // Check if the pointer is actually inside our image
             {
                 amountOfAsteroids += additionAmount;
-                amountOfScore++;
+                amountOfScore += additionAmount;
 
                 AdjustInfoLabels();
 
@@ -114,7 +115,7 @@ namespace AsteroidClicker
                 Opacity = 1.0,
                 FontSize = 16,
                 FontWeight = FontWeights.Bold,
-                Content = $"{FormatNumber(GetCookiesPerSecond())}/s",
+                Content = $"{FormatNumber(GetCookiesPerSecond(), true)}/s",
                 Foreground = (Brush)brushConverter.ConvertFrom("#FF00c531"),
                 Width = CookiesPerSecondParticles.Width,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
@@ -177,11 +178,17 @@ namespace AsteroidClicker
         }
         private void S_Timer(object sender, EventArgs e)
         {
+            if (!isShopPanelUnlocked && AccessToUpgrades())
+            {
+                CreateShopLayout();
+            }
+            AddUpgradeButtons();
+            AdjustUpgradeButtons();
             ShowCookiesPerSecond();
         }
         private void AdjustInfoLabels()
         {
-            LblAmount.Content = $"{FormatNumber(Math.Floor(amountOfAsteroids))}";
+            LblAmount.Content = $"{FormatNumber(Math.Floor(amountOfAsteroids))} (totaal: {FormatNumber(Math.Floor(amountOfScore))})";
             this.Title = $"Asteroid Clicker ({LblAmount.Content} asteroids)";
         }
         private void UpdateVisuals()
@@ -190,12 +197,16 @@ namespace AsteroidClicker
             AdjustUpgradeButtons();
         }
 
-        private string FormatNumber(decimal input)
+        private string FormatNumber(decimal input, bool separator = false)
         {
             var digitFormat = new NumberFormatInfo { 
                 NumberGroupSeparator = " ",
             };
-            string number = input.ToString("#,0", digitFormat);
+
+            string number;
+            if (!separator) number = input.ToString("#,0", digitFormat);
+            else number = input.ToString("#,0.0", digitFormat);
+
             decimal[] numberArray = new decimal[] { 1000000, 1000000000, 1000000000000, 1000000000000000, 1000000000000000000 };
             string[] numberName = new string[] { "miljoen", "miljard", "biljoen", "biljard", "triljoen" };
 
@@ -217,86 +228,231 @@ namespace AsteroidClicker
             return number;
         }
         #endregion
-        #region Shop/Upgrade System
-        static int MAX_UPGRADES = 7;
+        #region Dynamic Buttons
+        Button[] upgradeButton = new Button[MAX_UPGRADES];
+        WrapPanel[] upgradeButtonWrapper = new WrapPanel[MAX_UPGRADES];
+        private void AddUpgradeButtons()
+        {
+            if(!isShopPanelUnlocked || !AccessToUpgrades())
+            {
+                return;
+            }
+            
+            for (int i = 0; i < MAX_UPGRADES; i++)
+            {
+                if (upgradeButton[i] != null) continue;
+                var UpgradeData = GetUpgradeData(i);
+                if (amountOfScore < UpgradeData.price) continue;
 
-        int[] boughtUpgrades = new int[MAX_UPGRADES];
+                upgradeButtonWrapper[i] = new WrapPanel
+                {
+                    Orientation = Orientation.Horizontal,
+
+                };
+                upgradeButton[i] = new Button
+                {
+                    Name = $"BtnUpgrade{i}",
+                    Width = 200,
+                    Height = 60,
+                    Margin = new Thickness
+                    {
+                        Top = 2.5,
+                        Bottom = 2.5,
+                        Left = 5,
+                        Right = 5,
+                    },
+                    HorizontalContentAlignment = HorizontalAlignment.Left,
+                };
+                upgradeButton[i].Click += BtnUpgrade_Click;
+                upgradeButton[i].Content = upgradeButtonWrapper[i];
+                shopStackPanel.Children.Add(upgradeButton[i]);
+                SetUpgradeButtonText(i);
+            }
+        }
+
+        private void SetUpgradeButtonText(int index)
+        {
+            var UpgradeData = GetUpgradeData(index);
+
+            upgradeButtonWrapper[index].Children.Clear();
+
+            Grid btnGrid = new Grid
+            {
+                //ShowGridLines = true, // debug
+                Width = 200,
+                Height = 120
+            };
+
+            RowDefinition btnGridRow = new RowDefinition();
+            btnGridRow.Height = new GridLength(60, GridUnitType.Pixel);
+            btnGrid.RowDefinitions.Add(btnGridRow);
+
+            ColumnDefinition btnGridCol1 = new ColumnDefinition();
+            ColumnDefinition btnGridCol2 = new ColumnDefinition();
+            btnGridCol1.Width = new GridLength(45, GridUnitType.Pixel);
+            btnGrid.ColumnDefinitions.Add(btnGridCol1);
+            btnGrid.ColumnDefinitions.Add(btnGridCol2);
+
+            // Setup button design
+            Image BtnImage = new Image
+            {
+                Source = new BitmapImage(new Uri(UpgradeData.icon, UriKind.Relative)),
+                Width = 32,
+                Height = 32,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            btnGrid.Children.Add(BtnImage);
+            Grid.SetColumn(BtnImage, 0);
+
+            StringBuilder btnInfo = new StringBuilder();
+            btnInfo.AppendLine(UpgradeData.name);
+            btnInfo.AppendLine($"Kost {DisplayUpgradePrice(index)} asteroids");
+            btnInfo.AppendLine($"{boughtUpgrades[index]} in bezit");
+
+            Label BtnName = new Label
+            {
+                Content = btnInfo
+            };
+
+            btnGrid.Children.Add(BtnName);
+            Grid.SetColumn(BtnName, 1);
+
+            upgradeButtonWrapper[index].Children.Add(btnGrid);
+
+            // Add tooltip to buttons
+            StringBuilder tooltipInfo = new StringBuilder();
+            tooltipInfo.AppendLine($"{UpgradeData.name}");
+            tooltipInfo.AppendLine($"{UpgradeData.description}");
+            tooltipInfo.AppendLine($"");
+            tooltipInfo.Append($"Opbrengst: +{UpgradeData.output * 100}/seconde");
+            upgradeButton[index].ToolTip = tooltipInfo.ToString();
+
+            // Enable/disable tooltip based on current asteroids
+            if (amountOfAsteroids >= Math.Ceiling(GetUpgradePrice(index))) // ceil it here so they can't buy when button shows "18" (ceiled visually) but they have "17.X"
+            {
+                upgradeButton[index].IsEnabled = true;
+            }
+            else upgradeButton[index].IsEnabled = false;
+        }
 
         private void AdjustUpgradeButtons()
         {
             for (int i = 0; i < MAX_UPGRADES; i++)
             {
-                var UpgradeData = GetUpgradeData(i);
-
-                UpgradeData.wrapper.Children.Clear();
-
-                // Setup button design
-                Image BtnImage = new Image();
-                BtnImage.Source = new BitmapImage(new Uri(UpgradeData.icon, UriKind.Relative));
-                BtnImage.Width = 32;
-                BtnImage.Height = 32;
-                UpgradeData.wrapper.Children.Add(BtnImage);
-
-                Label BtnName = new Label();
-                BtnName.HorizontalContentAlignment = HorizontalAlignment.Left;
-                StringBuilder btnInfo = new StringBuilder();
-                btnInfo.AppendLine(UpgradeData.name);
-                btnInfo.AppendLine($"Kost {DisplayUpgradePrice(i)} asteroids");
-                btnInfo.AppendLine($"{boughtUpgrades[i]} in bezit");
-                BtnName.HorizontalContentAlignment = HorizontalAlignment.Center;
-                BtnName.Content = btnInfo;
-                UpgradeData.wrapper.Children.Add(BtnName);
-            }
-            HandleUpgradeButtons(); // disable buttons
-        }
-
-        private void HandleUpgradeButtons()
-        {
-            StringBuilder buttonString = new StringBuilder();
-            for (int i = 0; i < MAX_UPGRADES; i ++)
-            {
-                var UpgradeData = GetUpgradeData(i);
-
-                // Add tooltip to buttons
-                buttonString.Clear();
-                buttonString.AppendLine($"{UpgradeData.name}");
-                buttonString.AppendLine($"{UpgradeData.description}");
-                buttonString.AppendLine($"");
-                buttonString.Append($"Opbrengst: +{UpgradeData.output * 100}/seconde");
-                UpgradeData.button.ToolTip = buttonString.ToString();
-
-                // Enable/disable tooltip based on current asteroids
-                if (amountOfAsteroids >= Math.Ceiling(GetUpgradePrice(i))) // ceil it here so they can't buy when button shows "18" (ceiled visually) but they have "17.X"
+                if (upgradeButton[i] != null && HasUpgradeUnlocked(i))
                 {
-                    (UpgradeData.button).IsEnabled = true;
+                    if (upgradeButton[i].Visibility == Visibility.Visible)
+                    {
+                        SetUpgradeButtonText(i);
+                    }
                 }
-                else (UpgradeData.button).IsEnabled = false;
-            }           
+            }
         }
 
-        private (string name, string description, decimal price, decimal output, Button button, WrapPanel wrapper, string icon) GetUpgradeData(int index)
-        {
-            // TODO: Add exception for index out of bounds, maybe use an enum with constants?
-            var upgradeList = new (string, string, decimal, decimal, Button, WrapPanel, string)[]
-            {
-                ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0M, 0.001M, BtnUpgrade1, WrapBtnContent_1, "/assets/images/icons/thumb_astronaut.png"),
-                ("Mine Blaster",  "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0M, 0.01M, BtnUpgrade2, WrapBtnContent_2, "/assets/images/icons/thumb_blaster.png"),
-                ("Space Ship",  "Een extra space ship versneld de vluchten heen en terug.", 1100.0M, 0.08M, BtnUpgrade3, WrapBtnContent_3, "/assets/images/icons/thumb_rocket.png"),
-                ("Mining Colony",  "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0M, 0.47M, BtnUpgrade4, WrapBtnContent_4, "/assets/images/icons/thumb_miningcolony.png"),
-                ("Space Station",  "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0M, 2.60M, BtnUpgrade5, WrapBtnContent_5, "/assets/images/icons/thumb_spacestation.png"),
-                ("Hired Alien",  "Een aliense huurling heeft buitenaardse technologie om meer te minen.", 1400000.0M, 14.00M, BtnUpgrade6, WrapBtnContent_6, "/assets/images/icons/thumb_alien.png"),
-                ("Space Station",  "De nieuwste technology van de Galactic Empire: een laser schietende planeet.", 20000000.0M, 78.00M, BtnUpgrade7, WrapBtnContent_7, "/assets/images/icons/thumb_deathstar.png"),
-            };
-
-            return upgradeList[index];
-        }
-
-        private void BtnUpgrade_Click(object sender, RoutedEventArgs e) 
+        private void BtnUpgrade_Click(object sender, RoutedEventArgs e)
         {
             // TODO: Add an option to buy 1, buy 5, buy 10 or buy MAX of each option.
             // Maybe make it show a panel with these options when you click on the button?
             Button button = sender as Button;
-            ProcessUpgradePurchase(button); 
+            ProcessUpgradePurchase(button);
+        }
+        #endregion
+        #region Shop/Upgrade System
+        static int MAX_UPGRADES = 7;
+        int[] boughtUpgrades = new int[MAX_UPGRADES];
+
+        bool isShopPanelUnlocked = false;
+        StackPanel shopStackPanel = new StackPanel
+        {
+            Margin = new Thickness
+            {
+                Top = 0,
+                Bottom = 10,
+                Left = 5,
+                Right = 0
+            },
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Bottom
+        };
+
+        private void CreateShopLayout()
+        {
+            if (isShopPanelUnlocked) return;
+            if (!AccessToUpgrades()) return;
+
+            isShopPanelUnlocked = true;
+            StckUpgrades.Visibility = Visibility.Visible;
+            StckUpgrades.Children.Clear();
+
+            Viewbox viewbox = new Viewbox
+            {
+                Margin = new Thickness
+                {
+                    Top = 15,
+                    Bottom = 10,
+                    Left = 5,
+                    Right = 5
+                },
+            };
+
+            Label tmpStoreName = new Label
+            {
+                Foreground = Brushes.Purple,
+                FontWeight = FontWeights.Bold,
+                FontSize = 20,
+                Effect = new DropShadowEffect
+                {
+                    ShadowDepth = 2,
+                    Direction = 310,
+                    BlurRadius = 2
+                },
+                Content = "Upgrade Shop",
+                Margin = new Thickness
+                {
+                    Top = 0,
+                    Bottom = 7.5
+                },
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            shopStackPanel.Children.Add(tmpStoreName);
+
+            ScrollViewer categoryScroller = new ScrollViewer
+            {
+                Margin = new Thickness
+                {
+                    Top = 35,
+                    Bottom = 50,
+                    Left = 20,
+                    Right = 5,
+                },
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                Content = shopStackPanel,
+                Width = 250,
+                MaxHeight = 340
+            };
+
+            viewbox.Child = categoryScroller;
+            StckUpgrades.Children.Add(viewbox);
+        }
+
+        private (string name, string description, decimal price, decimal output, string icon) GetUpgradeData(int index)
+        {
+            // TODO: Add exception for index out of bounds, maybe use an enum with constants?
+            var upgradeList = new (string, string, decimal, decimal, string)[]
+            {
+                ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0M, 0.001M, "/assets/images/icons/thumb_astronaut.png"),
+                ("Mine Blaster", "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0M, 0.01M, "/assets/images/icons/thumb_blaster.png"),
+                ("Space Ship", "Een extra space ship versneld de vluchten heen en terug.", 1100.0M, 0.08M, "/assets/images/icons/thumb_rocket.png"),
+                ("Mining Colony", "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0M, 0.47M, "/assets/images/icons/thumb_miningcolony.png"),
+                ("Space Station", "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0M, 2.60M, "/assets/images/icons/thumb_spacestation.png"),
+                ("Hired Alien", "Een aliense huurling heeft buitenaardse technologie om meer te minen.", 1400000.0M, 14.00M, "/assets/images/icons/thumb_alien.png"),
+                ("Space Station", "De nieuwste technology van de Galactic Empire: een laser schietende planeet.", 20000000.0M, 78.00M, "/assets/images/icons/thumb_deathstar.png"),
+            };
+
+            return upgradeList[index];
         }
 
         private void ProcessUpgradePurchase(Button button)
@@ -335,9 +491,8 @@ namespace AsteroidClicker
 
             for(int i = 0; i < MAX_UPGRADES; i ++)
             {
-                var UpgradeData = GetUpgradeData(i);
 
-                if(button == UpgradeData.button)
+                if(button == upgradeButton[i])
                 {
                     specifier = i;
                     break;
@@ -369,9 +524,27 @@ namespace AsteroidClicker
             return price;
         }
 
+        private bool AccessToUpgrades()
+        {
+            bool unlocked = false;
+            for (int i = 0; i < MAX_UPGRADES; i++)
+            {
+                var UpgradeData = GetUpgradeData(i);
+                if (amountOfScore >= UpgradeData.price)
+                {
+                    unlocked = true;
+                }
+            }
+            return unlocked;
+        }
+        private bool HasUpgradeUnlocked(int index)
+        {
+            var UpgradeData = GetUpgradeData(index);
+            return (amountOfScore >= UpgradeData.price ? true : false);
+        }
+
         #endregion
         #region Upgrade Effects
-
         private void ProcessUpgradeOutput()
         {
             for(int i = 0; i < MAX_UPGRADES; i ++)
@@ -380,6 +553,7 @@ namespace AsteroidClicker
                 if (boughtUpgrades[i] > 0)
                 {
                     amountOfAsteroids += (UpgradeData.output * boughtUpgrades[i]);
+                    amountOfScore += (UpgradeData.output * boughtUpgrades[i]);
                     Console.WriteLine($"[{UpgradeData.name}] Adding {UpgradeData.output * boughtUpgrades[i]} (default: {UpgradeData.output}) for index {i}, new amount: {amountOfAsteroids}");
                     AdjustInfoLabels(); 
                 }
@@ -546,7 +720,7 @@ namespace AsteroidClicker
             sb.Append("Opgelet: het veld mag niet leeg zijn of spaties bevatten.");
 
             string inputName = Interaction.InputBox(sb.ToString(), "Verander de naam", LblMinerName.Content.ToString());
-            if(inputName != null || inputName.Contains(" "))
+            if(inputName.Length < 1 || inputName.Contains(" "))
             {
                 ShowFadeMessage("Verandering van naam mislukt", "De nieuwe naam mag niet leeg zijn en mag geen spaties bevatten!");
                 return;

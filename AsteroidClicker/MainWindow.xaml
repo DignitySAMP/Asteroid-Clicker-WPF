@@ -18,6 +18,7 @@
         <Grid.RowDefinitions>
             <RowDefinition/>
         </Grid.RowDefinitions>
+
         <!-- #region Category Panel -->
         <ScrollViewer Name="ScrollCategories" VerticalScrollBarVisibility="Auto">
             <StackPanel Name="StckCategories" Margin="5">
@@ -31,66 +32,29 @@
         <!--#region Playing Panel-->
         <Viewbox Grid.Column="1" Margin="25" >
             <StackPanel VerticalAlignment="Center">
-            <Label Name="LblMinerName" Content="PXL-Asteroid-Miner" HorizontalContentAlignment="Center" Foreground="#FF942aff" FontWeight="Bold" FontSize="16" MouseDoubleClick="LblMinerName_MouseDoubleClick">
-                <Label.Effect>
-                    <DropShadowEffect Color="#999" BlurRadius="5" ShadowDepth="2" Direction="300"/>
-                </Label.Effect>
-                <Label.ToolTip>
-                    Dubbel klik op de naam om deze te wijzigen.
-                </Label.ToolTip>
-            </Label>
-            <Label Name="LblAmount" Content="0" HorizontalContentAlignment="Center" Foreground="#FFF"></Label>
-            <Grid Name="GridBlastZone">
-                <Image Name="ImgAsteroid" Source="assets/asteroid.png" Height="128" Width="128" MouseDown="ImgAsteroid_MouseDown" MouseUp="ImgAsteroid_MouseUp" MouseLeave="ImgAsteroid_MouseLeave" MouseEnter="ImgAsteroid_MouseEnter"></Image>
-                <Canvas VerticalAlignment="Top" Name="CookiesPerSecondParticles" Width="125" Height="75"></Canvas>
-            </Grid>
-            <Canvas Name="CanvasDropParticles" Width="125" Height="50"></Canvas>
-        </StackPanel>
+                <Label Name="LblMinerName" Content="PXL-Asteroid-Miner" HorizontalContentAlignment="Center" Foreground="#FF942aff" FontWeight="Bold" FontSize="16" MouseDoubleClick="LblMinerName_MouseDoubleClick">
+                    <Label.Effect>
+                        <DropShadowEffect Color="#999" BlurRadius="5" ShadowDepth="2" Direction="300"/>
+                    </Label.Effect>
+                    <Label.ToolTip>
+                        Dubbel klik op de naam om deze te wijzigen.
+                    </Label.ToolTip>
+                </Label>
+                <Label Name="LblAmount" Content="0" HorizontalContentAlignment="Center" Foreground="#FFF"></Label>
+                <Grid Name="GridBlastZone">
+                    <Image Name="ImgAsteroid" Source="assets/asteroid.png" Height="128" Width="128" MouseDown="ImgAsteroid_MouseDown" MouseUp="ImgAsteroid_MouseUp" MouseLeave="ImgAsteroid_MouseLeave" MouseEnter="ImgAsteroid_MouseEnter"></Image>
+                    <Canvas VerticalAlignment="Top" Name="CookiesPerSecondParticles" Width="125" Height="75"></Canvas>
+                </Grid>
+                <Canvas Name="CanvasDropParticles" Width="125" Height="50"></Canvas>
+            </StackPanel>
         </Viewbox>
         <!--#endregion -->
         <!-- #region Shop Panel -->
-        <StackPanel Grid.Column="2">
+        <StackPanel Grid.Column="2" Name="StckUpgrades">
             <StackPanel.Background>
-                <ImageBrush ImageSource="assets/wall.png" Stretch="UniformToFill" Opacity="0.9"></ImageBrush>
+                <ImageBrush ImageSource="assets/wall.png" Opacity="0.9"></ImageBrush>
             </StackPanel.Background>
-            <Viewbox>
-                <Label HorizontalContentAlignment="Center" VerticalContentAlignment="Top" Margin="30,30,0,0" Foreground="#6232a5" FontWeight="Bold" FontSize="20" FontFamily="AniMe Matrix - MB_EN">
-                    <Label.Effect>
-                        <DropShadowEffect ShadowDepth="2" Direction="310" BlurRadius="2"/>
-                    </Label.Effect>
-                    Upgrade Shop
-                </Label>
-            </Viewbox>
-            <Viewbox>
-                <ScrollViewer Margin="0,10,5,0" HorizontalScrollBarVisibility="Disabled" Height="265">
-                    <StackPanel Margin="35,0,5,0">
-                        <Button Name="BtnUpgrade1" Height="60" Width="200"  Margin="0,0,0,5" Click="BtnUpgrade_Click">
-                            <WrapPanel Name="WrapBtnContent_1"></WrapPanel>
-                        </Button>
-                        <Button Name="BtnUpgrade2" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click">
-                            <WrapPanel Name="WrapBtnContent_2"></WrapPanel>
-                        </Button>
-
-                        <Button Name="BtnUpgrade3" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click">
-                            <WrapPanel Name="WrapBtnContent_3"></WrapPanel>
-                        </Button>
-                        <Button Name="BtnUpgrade4" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click">
-                            <WrapPanel Name="WrapBtnContent_4"></WrapPanel>
-                        </Button>
-                        <Button Name="BtnUpgrade5" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click" >
-                            <WrapPanel Name="WrapBtnContent_5"></WrapPanel>
-                        </Button>
-                        <Button Name="BtnUpgrade6" Height="60" Width="200" Margin="0,0,0,5" Click="BtnUpgrade_Click" >
-                            <WrapPanel Name="WrapBtnContent_6"></WrapPanel>
-                        </Button>
-                        <Button Name="BtnUpgrade7" Height="60" Width="200" Click="BtnUpgrade_Click" >
-                            <WrapPanel Name="WrapBtnContent_7"></WrapPanel>
-                        </Button>
-                    </StackPanel>
-                </ScrollViewer>
-            </Viewbox>
         </StackPanel>
-
         <!-- #endregion -->
         <!--#region MessageBox Panel-->
         <StackPanel Grid.ColumnSpan="3" Visibility="Hidden" VerticalAlignment="Center" HorizontalAlignment="Center" Name="StckMessageOverlay" Opacity="1">
