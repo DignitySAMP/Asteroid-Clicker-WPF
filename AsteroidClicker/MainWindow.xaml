@@ -49,6 +49,13 @@
             </StackPanel>
         </Viewbox>
         <!--#endregion -->
+        <!-- #region Golden Cookie Canvas -->
+        <Viewbox Margin="5" Grid.Column="1" Panel.ZIndex="999">
+            <Canvas Width="250" Height="360" Name="CanvasGoldenCookie" VerticalAlignment="Top">
+
+            </Canvas>
+        </Viewbox>
+        <!-- #endregion -->
         <!-- #region Shop Panel -->
         <StackPanel Grid.Column="2" Name="StckUpgrades">
             <StackPanel.Background>
