@@ -481,11 +481,34 @@ namespace AsteroidClicker
             else MessageBox.Show("Er is iets misgegaan met de upgrade. (Knop is niet geinitialiseerd)");
         }
 
-
         private decimal GetBonusUpgradeCost(int index)
         {
-            decimal cost = 100 * (index == 0 ? 1 : index); // temporary value
-            return cost;
+            decimal basePrice = GetUpgradeData(index).bonusPrice;
+
+            decimal defaultMultiplier = 100.0M;
+            decimal factor = 0;
+            for(int i = 0; i < amountOfBonusUpgrades[index]; i ++)
+            {
+                switch(factor)
+                {
+                    case 0:
+                        defaultMultiplier = 100.0M;
+                        break;
+                    case 1:
+                        defaultMultiplier *= 5;
+                        break;
+                    default:
+                        defaultMultiplier *= 10;
+                        break;
+                }
+                factor++;
+            }
+
+            if(amountOfBonusUpgrades[index] > 0)
+            {
+                return (basePrice * defaultMultiplier);
+            }
+            return basePrice;
         }
 
         private void ToggleBonusUpgradeButtons()
@@ -667,18 +690,21 @@ namespace AsteroidClicker
             StckUpgrades.Children.Add(viewbox);
         }
 
-        private (string name, string description, decimal price, decimal output, string icon, string bonusIcon) GetUpgradeData(int index)
+        private (string name, string description, decimal price, decimal output, string icon, string bonusIcon, decimal bonusPrice) GetUpgradeData(int index)
         {
-            // TODO: Add exception for index out of bounds, maybe use an enum with constants?
-            var upgradeList = new (string, string, decimal, decimal, string, string)[]
+            /*
+                bonusPrices taken from https://cookieclicker.fandom.com/wiki/Upgrades (Farm Upgrades section)
+                English ordinals converted to Dutch ordinals (million -> miljoen, billion -> miljard, etc)
+             */
+            var upgradeList = new (string, string, decimal, decimal, string, string, decimal)[]
             {
-                ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0M, 0.001M, "/assets/images/icons/thumb_astronaut.png", "/assets/images/bonus_icons/bonus-astronaut.png"),
-                ("Mine Blaster", "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0M, 0.01M, "/assets/images/icons/thumb_blaster.png", "/assets/images/bonus_icons/bonus-blaster.png"),
-                ("Space Ship", "Een extra space ship versneld de vluchten heen en terug.", 1100.0M, 0.08M, "/assets/images/icons/thumb_rocket.png", "/assets/images/bonus_icons/bonus-rocket.png"),
-                ("Mining Colony", "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0M, 0.47M, "/assets/images/icons/thumb_miningcolony.png", "/assets/images/bonus_icons/bonus-miningcolony.png"),
-                ("Space Station", "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0M, 2.60M, "/assets/images/icons/thumb_spacestation.png", "/assets/images/bonus_icons/bonus-spacestation.png"),
-                ("Hired Alien", "Een aliense huurling heeft buitenaardse technologie om meer te minen.", 1400000.0M, 14.00M, "/assets/images/icons/thumb_alien.png", "/assets/images/bonus_icons/bonus-alien.png"),
-                ("Deathstar", "De nieuwste technology van de Galactic Empire: een laser schietende planeet.", 20000000.0M, 78.00M, "/assets/images/icons/thumb_deathstar.png", "/assets/images/bonus_icons/bonus-deathstar.png"),
+                ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0M, 0.001M, "/assets/images/icons/thumb_astronaut.png", "/assets/images/bonus_icons/bonus-astronaut.png", 11000.0M),
+                ("Mine Blaster", "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0M, 0.01M, "/assets/images/icons/thumb_blaster.png", "/assets/images/bonus_icons/bonus-blaster.png", 55000.0M),
+                ("Space Ship", "Een extra space ship versneld de vluchten heen en terug.", 1100.0M, 0.08M, "/assets/images/icons/thumb_rocket.png", "/assets/images/bonus_icons/bonus-rocket.png", 550000.0M),
+                ("Mining Colony", "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0M, 0.47M, "/assets/images/icons/thumb_miningcolony.png", "/assets/images/bonus_icons/bonus-miningcolony.png", 55000000.0M),
+                ("Space Station", "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0M, 2.60M, "/assets/images/icons/thumb_spacestation.png", "/assets/images/bonus_icons/bonus-spacestation.png", 5500000000.0M),
+                ("Hired Alien", "Een aliense huurling heeft buitenaardse technologie om meer te minen.", 1400000.0M, 14.00M, "/assets/images/icons/thumb_alien.png", "/assets/images/bonus_icons/bonus-alien.png", 550000000000.0M),
+                ("Deathstar", "De nieuwste technology van de Galactic Empire: een laser schietende planeet.", 20000000.0M, 78.00M, "/assets/images/icons/thumb_deathstar.png", "/assets/images/bonus_icons/bonus-deathstar.png", 550000000000000.0M),
             };
 
             return upgradeList[index];
