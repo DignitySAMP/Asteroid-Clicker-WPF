@@ -123,6 +123,13 @@
   <ItemGroup>
     <Content Include="assets\audio\blaster.wav" />
     <Content Include="assets\audio\passiveblast.wav" />
+    <Resource Include="assets\images\bonus_icons\bonus-alien.png" />
+    <Resource Include="assets\images\bonus_icons\bonus-astronaut.png" />
+    <Resource Include="assets\images\bonus_icons\bonus-blaster.png" />
+    <Resource Include="assets\images\bonus_icons\bonus-deathstar.png" />
+    <Resource Include="assets\images\bonus_icons\bonus-miningcolony.png" />
+    <Resource Include="assets\images\bonus_icons\bonus-rocket.png" />
+    <Resource Include="assets\images\bonus_icons\bonus-spacestation.png" />
     <Resource Include="assets\images\icons_big\upgrade_ufo.png" />
     <Resource Include="assets\images\icons_big\upgrade_deathstar.png" />
     <Resource Include="assets\images\icons_big\upgrade_astronaut.png" />

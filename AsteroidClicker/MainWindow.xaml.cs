@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -99,10 +99,16 @@ namespace AsteroidClicker
                 var UpgradeData = GetUpgradeData(i);
                 if (boughtUpgrades[i] > 0)
                 {
-                    amount += (UpgradeData.output * boughtUpgrades[i]);
+                    amount += (UpgradeData.output * boughtUpgrades[i]) * (GetBonusUpgradeMultiplier(i));
                 }
             }
             return (amount*100);
+        }
+
+        private decimal GetCookiesPerUpgrade(int upgrade)
+        {
+            var UpgradeData = GetUpgradeData(upgrade);
+            return (UpgradeData.output * boughtUpgrades[upgrade]) * (GetBonusUpgradeMultiplier(upgrade));
         }
 
         private async void ShowCookiesPerSecond()
@@ -184,6 +190,7 @@ namespace AsteroidClicker
             }
             AddUpgradeButtons();
             AdjustUpgradeButtons();
+            ToggleBonusUpgradeButtons();
             ShowCookiesPerSecond();
         }
         private void AdjustInfoLabels()
@@ -233,16 +240,27 @@ namespace AsteroidClicker
         WrapPanel[] upgradeButtonWrapper = new WrapPanel[MAX_UPGRADES];
         private void AddUpgradeButtons()
         {
-            if(!isShopPanelUnlocked || !AccessToUpgrades())
+            if (!isShopPanelUnlocked || !AccessToUpgrades())
             {
                 return;
             }
-            
+
             for (int i = 0; i < MAX_UPGRADES; i++)
             {
                 if (upgradeButton[i] != null) continue;
                 var UpgradeData = GetUpgradeData(i);
                 if (amountOfScore < UpgradeData.price) continue;
+
+                StackPanel buttonContainer = new StackPanel
+                {
+                    Margin = new Thickness
+                    {
+                        Top = 5,
+                        Bottom = 5,
+                        Left = 5,
+                        Right = 5
+                    }
+                };
 
                 upgradeButtonWrapper[i] = new WrapPanel
                 {
@@ -251,21 +269,33 @@ namespace AsteroidClicker
                 };
                 upgradeButton[i] = new Button
                 {
-                    Name = $"BtnUpgrade{i}",
+                    BorderThickness = new Thickness
+                    {
+                        Top = 0,
+                        Bottom = 0,
+                        Left = 0,
+                        Right = 0,
+                    },
+                    Background = Brushes.AliceBlue,
                     Width = 200,
                     Height = 60,
                     Margin = new Thickness
                     {
-                        Top = 2.5,
-                        Bottom = 2.5,
+                        Top = 0,
+                        Bottom = 0,
                         Left = 5,
                         Right = 5,
                     },
                     HorizontalContentAlignment = HorizontalAlignment.Left,
                 };
+    
                 upgradeButton[i].Click += BtnUpgrade_Click;
                 upgradeButton[i].Content = upgradeButtonWrapper[i];
-                shopStackPanel.Children.Add(upgradeButton[i]);
+                buttonContainer.Children.Add(upgradeButton[i]);
+
+                CreateBonusButton(buttonContainer, i);
+
+                shopStackPanel.Children.Add(buttonContainer);
                 SetUpgradeButtonText(i);
             }
         }
@@ -325,7 +355,7 @@ namespace AsteroidClicker
             tooltipInfo.AppendLine($"{UpgradeData.name}");
             tooltipInfo.AppendLine($"{UpgradeData.description}");
             tooltipInfo.AppendLine($"");
-            tooltipInfo.Append($"Opbrengst: +{UpgradeData.output * 100}/seconde");
+            tooltipInfo.Append($"Opbrengst: +{GetCookiesPerUpgrade(index)}/seconde");
             upgradeButton[index].ToolTip = tooltipInfo.ToString();
 
             // Enable/disable tooltip based on current asteroids
@@ -357,6 +387,210 @@ namespace AsteroidClicker
             Button button = sender as Button;
             ProcessUpgradePurchase(button);
         }
+        #endregion
+        #region Bonus Upgrades
+
+        Button[] BtnBonusUpgrade = new Button[MAX_UPGRADES]; 
+        int[] amountOfBonusUpgrades = new int[MAX_UPGRADES];
+        private void CreateBonusButton(StackPanel container, int index)
+        {
+            BtnBonusUpgrade[index] = new Button
+            {
+                Width = 200,
+                Height = 55,
+                Margin = new Thickness
+                {
+                    Top = 2.5,
+                    Bottom = 2.5,
+                    Left = 5,
+                    Right = 5,
+                },
+                BorderThickness = new Thickness
+                {
+                    Top = 0,
+                    Bottom = 0,
+                    Left = 0,
+                    Right = 0,
+                },
+                Background = Brushes.Gold
+            };
+            BtnBonusUpgrade[index].Click += OnBonusStoreClick;
+
+            UpdateBonusUpgradeButtonText(index);
+            ToggleBonusUpgradeButton(index);
+
+            container.Children.Add(BtnBonusUpgrade[index]);
+        }
+        private void OnBonusStoreClick(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            ProcessBonusPurchase(button);
+        }
+
+
+        private int GetIndexOfBonusUpgrade(Button button)
+        {
+            int specifier = -1;
+
+            for (int i = 0; i < MAX_UPGRADES; i++)
+            {
+                if (button == BtnBonusUpgrade[i])
+                {
+                    specifier = i;
+                    break;
+                }
+            }
+
+            return specifier;
+        }
+
+        private void ProcessBonusPurchase(Button button)
+
+        {
+            int specifier = GetIndexOfBonusUpgrade(button);
+
+            if (boughtUpgrades[specifier] == 0)
+            {
+                ShowFadeMessage("Aankoop Mislukt", "Je moet eerst de normale upgrade kopen alvorens je de bonus kunt aankopen.");
+                return;
+            }
+
+            if (specifier != -1)
+            {
+                var UpgradeData = GetUpgradeData(specifier);
+                if (GetUpgradePrice(specifier) <= amountOfAsteroids)
+                {
+                    amountOfAsteroids -= GetUpgradePrice(specifier);
+                    amountOfBonusUpgrades[specifier]++;
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine($"Je hebt een {UpgradeData.name} bonus gekocht.");
+                    sb.AppendLine($"Deze kostte {GetBonusUpgradeCost(specifier)} asteroïden.");
+                    sb.AppendLine($"Je hebt nu nog {Math.Floor(amountOfAsteroids)} asteroïden over.");
+                    sb.AppendLine("");
+                    sb.AppendLine($"Alle opbrengsten worden nu {GetBonusUpgradeMultiplier(specifier)} keer verdubbeld.");
+                    sb.AppendLine("");
+                    sb.AppendLine($"Bonus opbrengst: {(GetCookiesPerUpgrade(specifier) * 100).ToString("N2")}/seconde");
+
+                    ShowFadeMessage($"{UpgradeData.name} gekocht", sb.ToString());
+
+                    AdjustInfoLabels(); // update game labels (title/score)
+                    ToggleBonusUpgradeButtons(); // update bonus button labels
+                }
+            }
+            else MessageBox.Show("Er is iets misgegaan met de upgrade. (Knop is niet geinitialiseerd)");
+        }
+
+
+        private decimal GetBonusUpgradeCost(int index)
+        {
+            decimal cost = 100 * (index == 0 ? 1 : index); // temporary value
+            return cost;
+        }
+
+        private void ToggleBonusUpgradeButtons()
+        {
+            for(int i = 0; i < MAX_UPGRADES; i ++)
+            {
+                if (BtnBonusUpgrade[i] != null)
+                {
+                    UpdateBonusUpgradeButtonText(i);
+                    ToggleBonusUpgradeButton(i);
+                }
+            }
+        }
+
+        private long GetBonusUpgradeMultiplier(int index)
+        {
+            long multiplier = 1;
+
+            if (amountOfBonusUpgrades[index] > 0)
+            {
+                for (int i = 0; i < amountOfBonusUpgrades[index]; i++)
+                {
+                    multiplier *= 2;
+                }
+            }
+
+            return multiplier;
+        }
+
+        private void UpdateBonusUpgradeButtonText(int index)
+        {
+            BtnBonusUpgrade[index].Content = "";
+
+            var upgradeData = GetUpgradeData(index);
+
+            Grid btnGrid = new Grid
+            {
+                Width = 200,
+                Height = 120,
+            };
+
+            RowDefinition btnGridRow = new RowDefinition
+            {
+                Height = new GridLength(60, GridUnitType.Pixel)
+            };
+            btnGrid.RowDefinitions.Add(btnGridRow);
+
+            ColumnDefinition btnGridCol1 = new ColumnDefinition
+            {
+                Width = new GridLength(45, GridUnitType.Pixel)
+            };
+            ColumnDefinition btnGridCol2 = new ColumnDefinition();
+            btnGrid.ColumnDefinitions.Add(btnGridCol1);
+            btnGrid.ColumnDefinitions.Add(btnGridCol2);
+
+            // Setup button design
+            Image BtnImage = new Image
+            {
+                Source = new BitmapImage(new Uri(upgradeData.bonusIcon, UriKind.Relative)),
+                Width = 30,
+                Height = 30,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness
+                {
+                    Top = 0,
+                    Left = 0,
+                    Right = 0,
+                    Bottom = 0
+                }
+            };
+
+            btnGrid.Children.Add(BtnImage);
+            Grid.SetColumn(BtnImage, 0);
+
+            StringBuilder btnInfo = new StringBuilder();
+            btnInfo.AppendLine($"{upgradeData.name} Bonus: {GetBonusUpgradeMultiplier(index)}x");
+            btnInfo.AppendLine($"Volgende Bonus: {GetBonusUpgradeMultiplier(index) * 2}x");
+            btnInfo.AppendLine($"Koop voor {GetBonusUpgradeCost(index).ToString("c2")}");
+
+            Label BtnName = new Label
+            {
+                Content = btnInfo.ToString(),
+                VerticalAlignment = VerticalAlignment.Center,
+                FontSize = 10,
+                HorizontalContentAlignment = HorizontalAlignment.Left
+            };
+            btnInfo.Clear();
+
+            btnGrid.Children.Add(BtnName);
+            Grid.SetColumn(BtnName, 1);
+
+            WrapPanel buttonWrapper = new WrapPanel();
+            buttonWrapper.Children.Add(btnGrid);
+            BtnBonusUpgrade[index].Content = buttonWrapper;
+        }
+
+        private void ToggleBonusUpgradeButton(int index)
+        {
+            if (GetBonusUpgradeCost(index) <= amountOfAsteroids)
+            {
+                BtnBonusUpgrade[index].IsEnabled = true;
+            }
+            else BtnBonusUpgrade[index].IsEnabled = false;
+        }
+
         #endregion
         #region Shop/Upgrade System
         static int MAX_UPGRADES = 7;
@@ -408,11 +642,6 @@ namespace AsteroidClicker
                     BlurRadius = 2
                 },
                 Content = "Upgrade Shop",
-                Margin = new Thickness
-                {
-                    Top = 0,
-                    Bottom = 7.5
-                },
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
@@ -438,18 +667,18 @@ namespace AsteroidClicker
             StckUpgrades.Children.Add(viewbox);
         }
 
-        private (string name, string description, decimal price, decimal output, string icon) GetUpgradeData(int index)
+        private (string name, string description, decimal price, decimal output, string icon, string bonusIcon) GetUpgradeData(int index)
         {
             // TODO: Add exception for index out of bounds, maybe use an enum with constants?
-            var upgradeList = new (string, string, decimal, decimal, string)[]
+            var upgradeList = new (string, string, decimal, decimal, string, string)[]
             {
-                ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0M, 0.001M, "/assets/images/icons/thumb_astronaut.png"),
-                ("Mine Blaster", "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0M, 0.01M, "/assets/images/icons/thumb_blaster.png"),
-                ("Space Ship", "Een extra space ship versneld de vluchten heen en terug.", 1100.0M, 0.08M, "/assets/images/icons/thumb_rocket.png"),
-                ("Mining Colony", "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0M, 0.47M, "/assets/images/icons/thumb_miningcolony.png"),
-                ("Space Station", "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0M, 2.60M, "/assets/images/icons/thumb_spacestation.png"),
-                ("Hired Alien", "Een aliense huurling heeft buitenaardse technologie om meer te minen.", 1400000.0M, 14.00M, "/assets/images/icons/thumb_alien.png"),
-                ("Space Station", "De nieuwste technology van de Galactic Empire: een laser schietende planeet.", 20000000.0M, 78.00M, "/assets/images/icons/thumb_deathstar.png"),
+                ("Astronaut",  "Een astronaut verzameld automatisch asteroïden.", 15.0M, 0.001M, "/assets/images/icons/thumb_astronaut.png", "/assets/images/bonus_icons/bonus-astronaut.png"),
+                ("Mine Blaster", "Een mine blaster veroorzaakt meer debris, dus meer asteroïden.", 100.0M, 0.01M, "/assets/images/icons/thumb_blaster.png", "/assets/images/bonus_icons/bonus-blaster.png"),
+                ("Space Ship", "Een extra space ship versneld de vluchten heen en terug.", 1100.0M, 0.08M, "/assets/images/icons/thumb_rocket.png", "/assets/images/bonus_icons/bonus-rocket.png"),
+                ("Mining Colony", "Een mining colony verzameld efficiënt meerdere asteroïden.", 12000.0M, 0.47M, "/assets/images/icons/thumb_miningcolony.png", "/assets/images/bonus_icons/bonus-miningcolony.png"),
+                ("Space Station", "Een space station wordt op een asteroïde geplaatst. Vluchten heen en weer zijn overbodig.", 130000.0M, 2.60M, "/assets/images/icons/thumb_spacestation.png", "/assets/images/bonus_icons/bonus-spacestation.png"),
+                ("Hired Alien", "Een aliense huurling heeft buitenaardse technologie om meer te minen.", 1400000.0M, 14.00M, "/assets/images/icons/thumb_alien.png", "/assets/images/bonus_icons/bonus-alien.png"),
+                ("Deathstar", "De nieuwste technology van de Galactic Empire: een laser schietende planeet.", 20000000.0M, 78.00M, "/assets/images/icons/thumb_deathstar.png", "/assets/images/bonus_icons/bonus-deathstar.png"),
             };
 
             return upgradeList[index];
@@ -465,6 +694,7 @@ namespace AsteroidClicker
                 if (GetUpgradePrice(specifier) <= amountOfAsteroids)
                 {
                     amountOfAsteroids -= GetUpgradePrice(specifier);
+                    boughtUpgrades[specifier]++;
 
                     StringBuilder sb = new StringBuilder();
                     sb.AppendLine($"Je hebt een {UpgradeData.name} gekocht voor {DisplayUpgradePrice(specifier)} asteroïden.");
@@ -472,11 +702,10 @@ namespace AsteroidClicker
                     sb.AppendLine("");
                     sb.AppendLine(UpgradeData.description);
                     sb.AppendLine("");
-                    sb.AppendLine($"Automatische opbrengst: {UpgradeData.output*100}/seconde");
+                    sb.AppendLine($"Automatische opbrengst: {UpgradeData.output*100}/seconde (x{GetBonusUpgradeMultiplier(specifier)} keer)");
 
                     ShowFadeMessage($"{UpgradeData.name} gekocht", sb.ToString());
 
-                    boughtUpgrades[specifier]++;
                     AdjustInfoLabels(); // update game labels (title/score)
                     AdjustUpgradeButtons(); // update button labels
                     AdjustCategories(); // update categories
@@ -552,9 +781,10 @@ namespace AsteroidClicker
                 var UpgradeData = GetUpgradeData(i);
                 if (boughtUpgrades[i] > 0)
                 {
-                    amountOfAsteroids += (UpgradeData.output * boughtUpgrades[i]);
-                    amountOfScore += (UpgradeData.output * boughtUpgrades[i]);
-                    Console.WriteLine($"[{UpgradeData.name}] Adding {UpgradeData.output * boughtUpgrades[i]} (default: {UpgradeData.output}) for index {i}, new amount: {amountOfAsteroids}");
+                    decimal addition = GetCookiesPerUpgrade(i);
+                    amountOfAsteroids += addition;
+                    amountOfScore += addition;
+                    Console.WriteLine($"[{UpgradeData.name}] Adding {addition} ({GetBonusUpgradeMultiplier(i)} bonus (default: {UpgradeData.output}) for index {i}, new amount: {amountOfAsteroids}");
                     AdjustInfoLabels(); 
                 }
             }
@@ -714,6 +944,7 @@ namespace AsteroidClicker
         #region Miner Namechanging
         private void LblMinerName_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            // BUG: Cancelling returns 0 string size, so the error message is concieved incorrectly.
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Voer de gewenste naam van de miner in.");
             sb.AppendLine("");
