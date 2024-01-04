@@ -122,7 +122,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="assets\audio\blaster.wav" />
+    <Content Include="assets\audio\goldenCookieSound.wav" />
     <Content Include="assets\audio\passiveblast.wav" />
+    <Resource Include="assets\bg_gold.png" />
     <Resource Include="assets\images\goldenAsteroid.png" />
     <Resource Include="assets\images\bonus_icons\bonus-alien.png" />
     <Resource Include="assets\images\bonus_icons\bonus-astronaut.png" />

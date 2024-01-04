@@ -77,5 +77,21 @@
             </Grid>
         </StackPanel>
         <!--#endregion-->
+
+        <!--#region Quest MessageBox Panel-->
+        <StackPanel Grid.ColumnSpan="3" Visibility="Hidden" VerticalAlignment="Center" HorizontalAlignment="Center" Name="StckQuestOverlay" Opacity="1">
+            <Grid>
+                <Grid.Background>
+                    <ImageBrush ImageSource="assets/bg_gold.png" Stretch="UniformToFill"></ImageBrush>
+                </Grid.Background>
+                <Viewbox Margin="25" VerticalAlignment="Top">
+                    <StackPanel Width="800" Height="380">
+                        <Label Margin="0,50,0,0" Name="LblQuestUpdateTitle" HorizontalContentAlignment="Center" Foreground="Black" FontSize="30">Test</Label>
+                        <Label Margin="0,50,0,0" Name="LblQuestUpdateText" Foreground="Black" HorizontalContentAlignment="Center" FontSize="20" VerticalContentAlignment="Center">Test</Label>
+                    </StackPanel>
+                </Viewbox>
+            </Grid>
+        </StackPanel>
+        <!--#endregion-->
     </Grid>
 </Window>

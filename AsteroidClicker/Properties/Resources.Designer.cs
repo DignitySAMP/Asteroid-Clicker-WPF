@@ -72,6 +72,15 @@ namespace AsteroidClicker.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
         /// </summary>
+        internal static System.IO.UnmanagedMemoryStream goldenCookieSound {
+            get {
+                return ResourceManager.GetStream("goldenCookieSound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
         internal static System.IO.UnmanagedMemoryStream passiveblast {
             get {
                 return ResourceManager.GetStream("passiveblast", resourceCulture);

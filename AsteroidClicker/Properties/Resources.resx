@@ -121,6 +121,9 @@
   <data name="blaster" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\assets\audio\blaster.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="goldenCookieSound" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\assets\audio\goldenCookieSound.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="passiveblast" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\assets\audio\passiveblast.wav;System.IO.MemoryStream, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>

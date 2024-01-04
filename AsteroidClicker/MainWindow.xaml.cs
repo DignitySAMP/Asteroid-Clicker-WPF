@@ -41,6 +41,11 @@ namespace AsteroidClicker
             s_timer.Tick += S_Timer;
             s_timer.Start();
 
+            DispatcherTimer m_timer = new DispatcherTimer();
+            m_timer.Interval = TimeSpan.FromMinutes(1);
+            m_timer.Tick += M_Timer;
+            m_timer.Start();
+
             blast_timer.Interval = TimeSpan.FromMilliseconds(25);
             blast_timer.Tick += Blast_Timer;
             
@@ -57,7 +62,6 @@ namespace AsteroidClicker
             {
                 amountOfAsteroids += additionAmount;
                 amountOfScore += additionAmount;
-
                 AdjustInfoLabels();
 
                 Random random = new Random();
@@ -193,10 +197,17 @@ namespace AsteroidClicker
             ToggleBonusUpgradeButtons();
             ShowCookiesPerSecond();
         }
+        private void M_Timer(object sender, EventArgs e)
+        {
+            SpawnGoldenCookie();
+        }
+
         private void AdjustInfoLabels()
         {
             LblAmount.Content = $"{FormatNumber(Math.Floor(amountOfAsteroids))} (totaal: {FormatNumber(Math.Floor(amountOfScore))})";
             this.Title = $"Asteroid Clicker ({LblAmount.Content} asteroids)";
+
+            CheckQuestProgress_TotalAsteroids();
         }
         private void UpdateVisuals()
         {
@@ -235,7 +246,7 @@ namespace AsteroidClicker
             return number;
         }
         #endregion
-        #region Dynamic Buttons
+        #region Upgrade Buttons
         Button[] upgradeButton = new Button[MAX_UPGRADES];
         WrapPanel[] upgradeButtonWrapper = new WrapPanel[MAX_UPGRADES];
         private void AddUpgradeButtons()
@@ -476,6 +487,7 @@ namespace AsteroidClicker
 
                     AdjustInfoLabels(); // update game labels (title/score)
                     ToggleBonusUpgradeButtons(); // update bonus button labels
+                    CheckQuestProgress_BuyBonusUpgrades(specifier);
                 }
             }
             else MessageBox.Show("Er is iets misgegaan met de upgrade. (Knop is niet geinitialiseerd)");
@@ -721,6 +733,8 @@ namespace AsteroidClicker
                 {
                     amountOfAsteroids -= GetUpgradePrice(specifier);
                     boughtUpgrades[specifier]++;
+                    CheckQuestProgress_BuyUpgrades();
+                    CheckQuestProgress_BuyUpgradeItem(specifier);
 
                     StringBuilder sb = new StringBuilder();
                     sb.AppendLine($"Je hebt een {UpgradeData.name} gekocht voor {DisplayUpgradePrice(specifier)} asteroïden.");
@@ -799,7 +813,7 @@ namespace AsteroidClicker
         }
 
         #endregion
-        #region Upgrade Effects
+        #region Automatic Cookie Gain
         private void ProcessUpgradeOutput()
         {
             for(int i = 0; i < MAX_UPGRADES; i ++)
@@ -811,7 +825,7 @@ namespace AsteroidClicker
                     amountOfAsteroids += addition;
                     amountOfScore += addition;
                     Console.WriteLine($"[{UpgradeData.name}] Adding {addition} ({GetBonusUpgradeMultiplier(i)} bonus (default: {UpgradeData.output}) for index {i}, new amount: {amountOfAsteroids}");
-                    AdjustInfoLabels(); 
+                    AdjustInfoLabels();
                 }
             }
         }
@@ -942,6 +956,7 @@ namespace AsteroidClicker
         }
         #endregion
         #region Custom Message System
+
         private async void ShowFadeMessage(string title, string text)
         {
             LblUpdateTitle.Content = title;
@@ -966,6 +981,7 @@ namespace AsteroidClicker
             StckMessageOverlay.Opacity = 0.0;
             StckMessageOverlay.Visibility = Visibility.Hidden;
         }
+
         #endregion
         #region Miner Namechanging
         private void LblMinerName_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -1083,6 +1099,534 @@ namespace AsteroidClicker
             };
 
             panel.Children.Add(categoryScroller);
+        }
+        #endregion
+        #region Golden Cookie
+
+        bool isGoldenCookieSpawned = false;
+        int goldenCookieClicks = 0;
+        private void SpawnGoldenCookie()
+        {
+            if(isGoldenCookieSpawned)
+            {
+                return;
+            }
+
+            Random rand = new Random();
+
+            int spawn_chance = rand.Next(0, 100);
+            Console.WriteLine($"Golden Cookie randomizer: {spawn_chance} (must be less than 30)");
+
+            if (spawn_chance < 30)
+            {
+                CanvasGoldenCookie.Children.Clear();
+                Image goldenCookie = new Image
+                {
+                    Source = new BitmapImage(new Uri("assets/images/goldenAsteroid.png", UriKind.Relative)),
+                    Width = 64,
+                    Height = 64,
+                    IsHitTestVisible = true, // can click through image
+                };
+                goldenCookie.MouseDown += GoldenCookie_MouseDown;
+
+                var radarSound = new System.Media.SoundPlayer();
+                radarSound.Stop();
+                radarSound.Stream = AsteroidClicker.Properties.Resources.goldenCookieSound;
+                radarSound.Play();
+
+                Canvas.SetTop(goldenCookie, rand.Next(0, 300));
+                Canvas.SetLeft(goldenCookie, rand.Next(0, 200));
+
+                CanvasGoldenCookie.Children.Add(goldenCookie);
+                isGoldenCookieSpawned = true;
+            }
+        }
+
+        private decimal CalculateGoldenCookieReward()
+        {
+            // The following code snippet is ran per ms (see ProcessUpgradeOutput). 
+            decimal reward = 0;
+            for (int i = 0; i < MAX_UPGRADES; i++)
+            {
+                var UpgradeData = GetUpgradeData(i);
+                if (boughtUpgrades[i] > 0)
+                {
+                    reward = GetCookiesPerUpgrade(i);
+                }
+            }
+
+            return (reward * 900000); // 900 000ms = 15 minutes
+        }
+
+        private void GoldenCookie_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            CanvasGoldenCookie.Children.Clear();
+            isGoldenCookieSpawned = false;
+            goldenCookieClicks++;
+            CheckQuestProgress_GoldenCookieClicks();
+
+            decimal addition = CalculateGoldenCookieReward();
+
+            Random rand = new Random();
+            if (addition == 0) addition += rand.Next(0, 150);
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Je hebt de zeldzame gouden asteroïde gemined!");
+            sb.AppendLine($"Deze is zeer waardevol. Je hebt {addition} verdient.");
+            ShowFadeMessage("Gouden Asteroïden gevonden", sb.ToString());
+
+            amountOfAsteroids += addition;
+            amountOfScore += addition;
+            Console.WriteLine($"[Golden Cookie] Adding {addition} (all gains * 15 minutes), new amount: {amountOfAsteroids}");
+            AdjustInfoLabels();
+
+        }
+        #endregion
+        #region Quests
+        const int MAX_QUESTS = 110;
+
+        enum QuestConstants
+        {
+            // Buy Quests,
+            QUEST_BUY_UPGRADE_10 = 0,
+            QUEST_BUY_UPGRADE_25,
+            QUEST_BUY_UPGRADE_50,
+            QUEST_BUY_UPGRADE_100,
+            QUEST_BUY_UPGRADE_250,
+            QUEST_BUY_UPGRADE_500,
+            QUEST_BUY_UPGRADE_1000,
+            QUEST_BUY_UPGRADE_2500,
+            QUEST_BUY_UPGRADE_5000,
+            QUEST_BUY_UPGRADE_10K,
+            QUEST_BUY_UPGRADE_25K,
+            QUEST_BUY_UPGRADE_50K,
+            QUEST_BUY_UPGRADE_100K,
+            QUEST_BUY_UPGRADE_250K,
+            QUEST_BUY_UPGRADE_500K,
+            QUEST_BUY_UPGRADE_1MIL,
+            // Own Quests,
+            QUEST_OWN_ASTRONAUTS_5,
+            QUEST_OWN_ASTRONAUTS_10,
+            QUEST_OWN_ASTRONAUTS_25,
+            QUEST_OWN_ASTRONAUTS_50,
+            QUEST_OWN_ASTRONAUTS_100,
+            QUEST_OWN_MINEBLASTERS_5,
+            QUEST_OWN_MINEBLASTERS_10,
+            QUEST_OWN_MINEBLASTERS_25,
+            QUEST_OWN_MINEBLASTERS_50,
+            QUEST_OWN_MINEBLASTERS_100,
+            QUEST_OWN_SPACESHIPS_5,
+            QUEST_OWN_SPACESHIPS_10,
+            QUEST_OWN_SPACESHIPS_25,
+            QUEST_OWN_SPACESHIPS_50,
+            QUEST_OWN_SPACESHIPS_100,
+            QUEST_OWN_MININGCOLONIES_5,
+            QUEST_OWN_MININGCOLONIES_10,
+            QUEST_OWN_MININGCOLONIES_25,
+            QUEST_OWN_MININGCOLONIES_50,
+            QUEST_OWN_MININGCOLONIES_100,
+            QUEST_OWN_SPACESTATIONS_5,
+            QUEST_OWN_SPACESTATIONS_10,
+            QUEST_OWN_SPACESTATIONS_25,
+            QUEST_OWN_SPACESTATIONS_50,
+            QUEST_OWN_SPACESTATIONS_100,
+            QUEST_OWN_HIREDALIENS_5,
+            QUEST_OWN_HIREDALIENS_10,
+            QUEST_OWN_HIREDALIENS_25,
+            QUEST_OWN_HIREDALIENS_50,
+            QUEST_OWN_HIREDALIENS_100,
+            QUEST_OWN_DEATHSTARS_5,
+            QUEST_OWN_DEATHSTARS_10,
+            QUEST_OWN_DEATHSTARS_25,
+            QUEST_OWN_DEATHSTARS_50,
+            QUEST_OWN_DEATHSTARS_100,
+            // Buy Bonus Quests,
+            QUEST_BUY_BONUS_ASTRONAUT_5,
+            QUEST_BUY_BONUS_ASTRONAUT_10,
+            QUEST_BUY_BONUS_ASTRONAUT_25,
+            QUEST_BUY_BONUS_MINEBLASTER_5,
+            QUEST_BUY_BONUS_MINEBLASTER_10,
+            QUEST_BUY_BONUS_MINEBLASTER_25,
+            QUEST_BUY_BONUS_SPACESHIP_5,
+            QUEST_BUY_BONUS_SPACESHIP_10,
+            QUEST_BUY_BONUS_SPACESHIP_25,
+            QUEST_BUY_BONUS_SPACESTATION_5,
+            QUEST_BUY_BONUS_SPACESTATION_10,
+            QUEST_BUY_BONUS_SPACESTATION_25,
+            QUEST_BUY_BONUS_MININGCOLONY_5,
+            QUEST_BUY_BONUS_MININGCOLONY_10,
+            QUEST_BUY_BONUS_MININGCOLONY_25,
+            QUEST_BUY_BONUS_HIREDALIEN_5,
+            QUEST_BUY_BONUS_HIREDALIEN_10,
+            QUEST_BUY_BONUS_HIREDALIEN_25,
+            QUEST_BUY_BONUS_DEATHSTAR_5,
+            QUEST_BUY_BONUS_DEATHSTAR_10,
+            QUEST_BUY_BONUS_DEATHSTAR_25,
+            // Golden Cookie Quests,
+            QUEST_CLICK_GOLDENCOOKIE_1,
+            QUEST_CLICK_GOLDENCOOKIE_5,
+            QUEST_CLICK_GOLDENCOOKIE_10,
+            QUEST_CLICK_GOLDENCOOKIE_25,
+            QUEST_CLICK_GOLDENCOOKIE_50,
+            QUEST_CLICK_GOLDENCOOKIE_100,
+            QUEST_CLICK_GOLDENCOOKIE_250,
+            QUEST_CLICK_GOLDENCOOKIE_500,
+            QUEST_CLICK_GOLDENCOOKIE_1000,
+            // Asteroids Gained Quests,
+            QUEST_ASTEROID_TOTAL_100,
+            QUEST_ASTEROID_TOTAL_500,
+            QUEST_ASTEROID_TOTAL_1K,
+            QUEST_ASTEROID_TOTAL_5K,
+            QUEST_ASTEROID_TOTAL_10K,
+            QUEST_ASTEROID_TOTAL_25K,
+            QUEST_ASTEROID_TOTAL_50K,
+            QUEST_ASTEROID_TOTAL_100K,
+            QUEST_ASTEROID_TOTAL_250K,
+            QUEST_ASTEROID_TOTAL_500K,
+            QUEST_ASTEROID_TOTAL_1000K,
+            QUEST_ASTEROID_TOTAL_2500K,
+            QUEST_ASTEROID_TOTAL_5000K,
+            QUEST_ASTEROID_TOTAL_10M,
+            QUEST_ASTEROID_TOTAL_25M,
+            QUEST_ASTEROID_TOTAL_50M,
+            QUEST_ASTEROID_TOTAL_100M,
+            QUEST_ASTEROID_TOTAL_250M,
+            QUEST_ASTEROID_TOTAL_500M,
+            QUEST_ASTEROID_TOTAL_1000M,
+            QUEST_ASTEROID_TOTAL_2500M,
+            QUEST_ASTEROID_TOTAL_5000M,
+            QUEST_ASTEROID_TOTAL_10B,
+            QUEST_ASTEROID_TOTAL_25B,
+            QUEST_ASTEROID_TOTAL_50B,
+            QUEST_ASTEROID_TOTAL_100B,
+            QUEST_ASTEROID_TOTAL_250B,
+            QUEST_ASTEROID_TOTAL_500B,
+            QUEST_ASTEROID_TOTAL_1T,
+        };
+        string[] questNames = new string[MAX_QUESTS]
+        {
+            "Buy 10 Upgrades",
+            "Buy 25 Upgrades",
+            "Buy 50 Upgrades",
+            "Buy 100 Upgrades",
+            "Buy 250 Upgrades",
+            "Buy 500 Upgrades",
+            "Buy 1,000 Upgrades",
+            "Buy 2,500 Upgrades",
+            "Buy 5,000 Upgrades",
+            "Buy 10,000 Upgrades",
+            "Buy 25,000 Upgrades",
+            "Buy 50,000 Upgrades",
+            "Buy 100,000 Upgrades",
+            "Buy 250,000 Upgrades",
+            "Buy 500,000 Upgrades",
+            "Buy 1,000,000 Upgrades",
+            "Own 5 Astronauts",
+            "Own 10 Astronauts",
+            "Own 25 Astronauts",
+            "Own 50 Astronauts",
+            "Own 100 Astronauts",
+            "Own 5 Mine Blasters",
+            "Own 10 Mine Blasters",
+            "Own 25 Mine Blasters",
+            "Own 50 Mine Blasters",
+            "Own 100 Mine Blasters",
+            "Own 5 Space Ships",
+            "Own 10 Space Ships",
+            "Own 25 Space Ships",
+            "Own 50 Space Ships",
+            "Own 100 Space Ships",
+            "Own 5 Mining Colonies",
+            "Own 10 Mining Colonies",
+            "Own 25 Mining Colonies",
+            "Own 50 Mining Colonies",
+            "Own 100 Mining Colonies",
+            "Own 5 Space Stations",
+            "Own 10 Space Stations",
+            "Own 25 Space Stations",
+            "Own 50 Space Stations",
+            "Own 100 Space Stations",
+            "Own 5 Hired Aliens",
+            "Own 10 Hired Aliens",
+            "Own 25 Hired Aliens",
+            "Own 50 Hired Aliens",
+            "Own 100 Hired Aliens",
+            "Own 5 Deathstars",
+            "Own 10 Deathstars",
+            "Own 25 Deathstars",
+            "Own 50 Deathstars",
+            "Own 100 Deathstars",
+            "Buy 5 Astronaut Bonusses",
+            "Buy 5 Mine Blasters Bonusses",
+            "Buy 5 Space Ships Bonusses",
+            "Buy 5 Mining Colonys Bonusses",
+            "Buy 5 Space Stations Bonusses",
+            "Buy 5 Hired Aliens Bonusses",
+            "Buy 5 Deathstars Bonusses",
+            "Buy 10 Astronaut Bonusses",
+            "Buy 10 Mine Blasters Bonusses",
+            "Buy 10 Space Ships Bonusses",
+            "Buy 10 Mining Colonys Bonusses",
+            "Buy 10 Space Stations Bonusses",
+            "Buy 10 Hired Aliens Bonusses",
+            "Buy 10 Deathstars Bonusses",
+            "Buy 25 Astronaut Bonusses",
+            "Buy 25 Mine Blasters Bonusses",
+            "Buy 25 Space Ships Bonusses",
+            "Buy 25 Mining Colonys Bonusses",
+            "Buy 25 Space Stations Bonusses",
+            "Buy 25 Hired Aliens Bonusses",
+            "Buy 25 Deathstars Bonusses",
+            "Click Golden Cookie 1 Time",
+            "Click Golden Cookie 5 Times",
+            "Click Golden Cookie 10 Times",
+            "Click Golden Cookie 25 Times",
+            "Click Golden Cookie 50 Times",
+            "Click Golden Cookie 100 Times",
+            "Click Golden Cookie 250 Times",
+            "Click Golden Cookie 500 Times",
+            "Click Golden Cookie 1000 Times",
+            "Reach 100 Asteroids",
+            "Reach 500 Asteroids",
+            "Reach 1000 Asteroids",
+            "Reach 5000 Asteroids",
+            "Reach 10,000 Asteroids",
+            "Reach 25,000 Asteroids",
+            "Reach 50,000 Asteroids",
+            "Reach 100,0000 Asteroids",
+            "Reach 250,0000 Asteroids",
+            "Reach 500,0000 Asteroids",
+            "Reach 1,000,0000 Asteroids",
+            "Reach 2,500,0000 Asteroids",
+            "Reach 5,000,0000 Asteroids",
+            "Reach 10,000,0000 Asteroids",
+            "Reach 25,000,0000 Asteroids",
+            "Reach 50,000,0000 Asteroids",
+            "Reach 100,000,000 Asteroids",
+            "Reach 250,000,000 Asteroids",
+            "Reach 500,000,000 Asteroids",
+            "Reach 1,000,000,000 Asteroids",
+            "Reach 2,500,000,000 Asteroids",
+            "Reach 5,000,000,000 Asteroids",
+            "Reach 10,000,000,000 Asteroids",
+            "Reach 25,000,000,000 Asteroids",
+            "Reach 50,000,000,000 Asteroids",
+            "Reach 100,000,000,000 Asteroids",
+            "Reach 250,000,000,000 Asteroids",
+            "Reach 500,000,000,000 Asteroids",
+            "Reach 1,000,000,000,000 Asteroids"
+        };
+        bool[] questComplete = new bool[MAX_QUESTS];
+
+        private void CheckQuestProgress_BuyBonusUpgrades(int index)
+        {
+            var upgradeData = GetUpgradeData(index);
+
+            switch (upgradeData.name)
+            {
+                case "Astronaut":
+                    if (amountOfBonusUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_ASTRONAUT_25);
+                    else if (amountOfBonusUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_ASTRONAUT_10);
+                    else if (amountOfBonusUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_ASTRONAUT_5);
+                    break;
+                case "Mine Blaster":
+                    if (amountOfBonusUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_MINEBLASTER_25);
+                    else if (amountOfBonusUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_MINEBLASTER_10);
+                    else if (amountOfBonusUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_MINEBLASTER_5);
+                    break;
+                case "Space Ship":
+                    if (amountOfBonusUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_SPACESHIP_25);
+                    else if (amountOfBonusUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_SPACESHIP_10);
+                    else if (amountOfBonusUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_SPACESHIP_5);
+                    break;
+                case "Mining Colony":
+                    if (amountOfBonusUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_HIREDALIEN_25);
+                    else if (amountOfBonusUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_MININGCOLONY_10);
+                    else if (amountOfBonusUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_MININGCOLONY_5);
+                    break;
+                case "Space Station":
+                    if (amountOfBonusUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_SPACESTATION_25);
+                    else if (amountOfBonusUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_SPACESTATION_10);
+                    else if (amountOfBonusUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_SPACESTATION_5);
+                    break;
+                case "Hired Alien":
+                    if (amountOfBonusUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_MININGCOLONY_25);
+                    else if (amountOfBonusUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_HIREDALIEN_10);
+                    else if (amountOfBonusUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_HIREDALIEN_5);
+                    break;
+                case "Deathstar":
+                    if (amountOfBonusUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_DEATHSTAR_25);
+                    else if (amountOfBonusUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_DEATHSTAR_10);
+                    else if (amountOfBonusUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_BUY_BONUS_DEATHSTAR_5);
+                    break;
+            }
+        }
+        private void CheckQuestProgress_GoldenCookieClicks()
+        {
+            if (goldenCookieClicks >= 1000) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_1000);
+            else if (goldenCookieClicks >= 500) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_500);
+            else if (goldenCookieClicks >= 250) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_250);
+            else if (goldenCookieClicks >= 100) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_100);
+            else if (goldenCookieClicks >= 50) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_50);
+            else if (goldenCookieClicks >= 25) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_25);
+            else if (goldenCookieClicks >= 10) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_10);
+            else if (goldenCookieClicks >= 5) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_5);
+            else if (goldenCookieClicks >= 1) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_1);
+        }
+        private void CheckQuestProgress_BuyUpgrades()
+        {
+            long total = 0;
+            for(int i = 0; i < MAX_UPGRADES; i ++)
+            {
+                if(boughtUpgrades[i] > 0)
+                {
+                    total += boughtUpgrades[i];
+                }
+            }
+            if (total >= 1000000) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_1MIL);
+            else if (total >= 500000) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_500K);
+            else if (total >= 250000) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_250K);
+            else if (total >= 100000) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_100K);
+            else if (total >= 50000) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_50K);
+            else if (total >= 25000) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_25K);
+            else if (total >= 10000) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_10K);
+            else if (total >= 5000) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_5000);
+            else if (total >= 2500) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_2500);
+            else if (total >= 1000) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_1000);
+            else if (total >= 500) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_500);
+            else if (total >= 250) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_250);
+            else if (total >= 100) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_100);
+            else if (total >= 50) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_50);
+            else if (total >= 25) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_25);
+            else if (total >= 10) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_10);
+        }
+        private void CheckQuestProgress_TotalAsteroids()
+        {
+            if (amountOfAsteroids >= 1000000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_1T);
+            else if (amountOfAsteroids >= 100000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_500B);
+            else if (amountOfAsteroids >= 100000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_250B);
+            else if (amountOfAsteroids >= 100000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_100B);
+            else if (amountOfAsteroids >= 10000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_50B);
+            else if (amountOfAsteroids >= 10000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_25B);
+            else if (amountOfAsteroids >= 10000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_10B);
+            else if (amountOfAsteroids >= 1000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_5000M);
+            else if (amountOfAsteroids >= 1000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_2500M);
+            else if (amountOfAsteroids >= 1000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_1000M);
+            else if (amountOfAsteroids >= 100000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_500M);
+            else if (amountOfAsteroids >= 100000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_250M);
+            else if (amountOfAsteroids >= 100000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_100M);
+            else if (amountOfAsteroids >= 50000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_50M);
+            else if (amountOfAsteroids >= 25000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_25M);
+            else if (amountOfAsteroids >= 10000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_10M);
+            else if (amountOfAsteroids >= 5000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_5000K);
+            else if (amountOfAsteroids >= 2500000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_2500K);
+            else if (amountOfAsteroids >= 1000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_1000K);
+            else if (amountOfAsteroids >= 500000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_500K);
+            else if (amountOfAsteroids >= 250000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_250K);
+            else if (amountOfAsteroids >= 100000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_100K);
+            else if (amountOfAsteroids >= 50000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_50K);
+            else if (amountOfAsteroids >= 25000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_25K);
+            else if (amountOfAsteroids >= 10000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_10K);
+            else if (amountOfAsteroids >= 5000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_5K);
+            else if (amountOfAsteroids >= 1000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_1K);
+            else if (amountOfAsteroids >= 500) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_500);
+            else if (amountOfAsteroids >= 100) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_100);
+        }
+        private void CheckQuestProgress_BuyUpgradeItem(int index)
+        {
+            var upgradeData = GetUpgradeData(index);
+
+            switch(upgradeData.name)
+            {
+                case "Astronaut":
+                    if (boughtUpgrades[index] >= 100) ProgressQuest(QuestConstants.QUEST_OWN_ASTRONAUTS_100);
+                    else if (boughtUpgrades[index] >= 50) ProgressQuest(QuestConstants.QUEST_OWN_ASTRONAUTS_50);
+                    else if (boughtUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_OWN_ASTRONAUTS_25);
+                    else if (boughtUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_OWN_ASTRONAUTS_10);
+                    else if (boughtUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_OWN_ASTRONAUTS_5);
+                    break;
+                case "Mine Blaster":                   
+                    if (boughtUpgrades[index] >= 100) ProgressQuest(QuestConstants.QUEST_OWN_MINEBLASTERS_100);
+                    else if (boughtUpgrades[index] >= 50) ProgressQuest(QuestConstants.QUEST_OWN_MINEBLASTERS_50);
+                    else if (boughtUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_OWN_MINEBLASTERS_25);
+                    else if (boughtUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_OWN_MINEBLASTERS_10);
+                    else if (boughtUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_OWN_MINEBLASTERS_5);
+
+                    break;
+                case "Space Ship":
+                    if (boughtUpgrades[index] >= 100) ProgressQuest(QuestConstants.QUEST_OWN_MINEBLASTERS_100);
+                    else if (boughtUpgrades[index] >= 50) ProgressQuest(QuestConstants.QUEST_OWN_MINEBLASTERS_50);
+                    else if (boughtUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_OWN_MINEBLASTERS_25);
+                    else if (boughtUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_OWN_MINEBLASTERS_10);
+                    else if (boughtUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_OWN_MINEBLASTERS_5);
+                    break;
+                case "Mining Colony":
+                    if (boughtUpgrades[index] >= 100) ProgressQuest(QuestConstants.QUEST_OWN_MININGCOLONIES_100);
+                    else if (boughtUpgrades[index] >= 50) ProgressQuest(QuestConstants.QUEST_OWN_MININGCOLONIES_50);
+                    else if (boughtUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_OWN_MININGCOLONIES_25);
+                    else if (boughtUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_OWN_MININGCOLONIES_10);
+                    else if (boughtUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_OWN_MININGCOLONIES_5);
+                    break;
+                case "Space Station":
+                    if (boughtUpgrades[index] >= 100) ProgressQuest(QuestConstants.QUEST_OWN_SPACESTATIONS_100);
+                    else if (boughtUpgrades[index] >= 50) ProgressQuest(QuestConstants.QUEST_OWN_SPACESTATIONS_50);
+                    else if (boughtUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_OWN_SPACESTATIONS_25);
+                    else if (boughtUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_OWN_SPACESTATIONS_10);
+                    else if (boughtUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_OWN_SPACESTATIONS_5);
+                    break;
+                case "Hired Alien":
+                    if (boughtUpgrades[index] >= 100) ProgressQuest(QuestConstants.QUEST_OWN_HIREDALIENS_100);
+                    else if (boughtUpgrades[index] >= 50) ProgressQuest(QuestConstants.QUEST_OWN_HIREDALIENS_50);
+                    else if (boughtUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_OWN_HIREDALIENS_25);
+                    else if (boughtUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_OWN_HIREDALIENS_10);
+                    else if (boughtUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_OWN_HIREDALIENS_5);
+                    break;
+                case "Deathstar":
+                    if (boughtUpgrades[index] >= 100) ProgressQuest(QuestConstants.QUEST_OWN_DEATHSTARS_100);
+                    else if (boughtUpgrades[index] >= 50) ProgressQuest(QuestConstants.QUEST_OWN_DEATHSTARS_50);
+                    else if (boughtUpgrades[index] >= 25) ProgressQuest(QuestConstants.QUEST_OWN_DEATHSTARS_25);
+                    else if (boughtUpgrades[index] >= 10) ProgressQuest(QuestConstants.QUEST_OWN_DEATHSTARS_10);
+                    else if (boughtUpgrades[index] >= 5) ProgressQuest(QuestConstants.QUEST_OWN_DEATHSTARS_5);
+                    break;
+            }
+        }
+
+        private void ProgressQuest(QuestConstants constant)
+        {
+            int index = (int)constant;
+            Console.WriteLine($"Quest Completed for {index}: {questComplete[index]}");
+            if (questComplete[index]) return;
+            questComplete[index] = true;
+
+            ShowQuestMessage("Quest Unlocked", $"{questNames[index]}");
+            // make new function for quests
+        }
+
+
+        private async void ShowQuestMessage(string title, string text)
+        {
+            // BUG: This often overlaps useful information. Make it so if this is visible (or FadeMessage), the other gets delayed. This can also be used for overlapping FadeMessages.
+            LblQuestUpdateTitle.Content = title;
+            LblQuestUpdateText.Content = text;
+
+            StckQuestOverlay.Opacity = 0.0;
+            StckQuestOverlay.Visibility = Visibility.Visible;
+            while (StckQuestOverlay.Opacity <= 1.0)
+            {
+                await Task.Delay(20);
+                StckQuestOverlay.Opacity += 0.15;
+            }
+            StckQuestOverlay.Opacity = 1.0;
+
+            await Task.Delay(3500);
+
+            while (StckQuestOverlay.Opacity > 0.0)
+            {
+                await Task.Delay(20);
+                StckQuestOverlay.Opacity -= 0.15;
+            }
+            StckQuestOverlay.Opacity = 0.0;
+            StckQuestOverlay.Visibility = Visibility.Hidden;
         }
         #endregion
     }
