@@ -19,7 +19,6 @@ namespace AsteroidClicker
     /// </summary>
     public partial class MainWindow : Window
     {
-        // TODO: Add a button for muting volume
         #region Global Variables
         // Global variables
         decimal amountOfAsteroids = 0.0M; // Cookies
@@ -133,11 +132,7 @@ namespace AsteroidClicker
             };
             Canvas.SetTop(asteroidPerSecondGain, 50);
 
-            // Play a sound
-            var blastSound = new System.Media.SoundPlayer();
-            blastSound.Stop();
-            blastSound.Stream = AsteroidClicker.Properties.Resources.passiveblast;
-            blastSound.Play();
+            PlaySyncedSound(Properties.Resources.passiveblast);
 
             // Create blast on random position
             Image smallBlastParticleImg = new Image
@@ -393,8 +388,6 @@ namespace AsteroidClicker
 
         private void BtnUpgrade_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Add an option to buy 1, buy 5, buy 10 or buy MAX of each option.
-            // Maybe make it show a panel with these options when you click on the button?
             Button button = sender as Button;
             ProcessUpgradePurchase(button);
         }
@@ -662,7 +655,7 @@ namespace AsteroidClicker
                     Bottom = 10,
                     Left = 5,
                     Right = 5
-                },
+                }
             };
 
             Label tmpStoreName = new Label
@@ -858,10 +851,8 @@ namespace AsteroidClicker
 
             blastCurrentImage = 0;
 
-            // Load sound from memory (added as resource)
-            var blastSound = new System.Media.SoundPlayer();
-            blastSound.Stream = AsteroidClicker.Properties.Resources.blaster;
-            blastSound.Play();
+
+            PlaySyncedSound(Properties.Resources.blaster);
 
             GridBlastZone.Children.Add(blastParticleImg);
 
@@ -1129,10 +1120,7 @@ namespace AsteroidClicker
                 };
                 goldenCookie.MouseDown += GoldenCookie_MouseDown;
 
-                var radarSound = new System.Media.SoundPlayer();
-                radarSound.Stop();
-                radarSound.Stream = AsteroidClicker.Properties.Resources.goldenCookieSound;
-                radarSound.Play();
+                PlaySyncedSound(Properties.Resources.goldenCookieSound);
 
                 Canvas.SetTop(goldenCookie, rand.Next(0, 300));
                 Canvas.SetLeft(goldenCookie, rand.Next(0, 200));
@@ -1599,9 +1587,7 @@ namespace AsteroidClicker
             questComplete[index] = true;
 
             ShowQuestMessage("Quest Unlocked", $"{questNames[index]}");
-            // make new function for quests
         }
-
 
         private async void ShowQuestMessage(string title, string text)
         {
@@ -1628,6 +1614,127 @@ namespace AsteroidClicker
             StckQuestOverlay.Opacity = 0.0;
             StckQuestOverlay.Visibility = Visibility.Hidden;
         }
+        #endregion
+        #region Quest List
+        bool IsQuestListToggled = false;
+        private void ToggleQuestList()
+        {
+            if (!IsQuestListToggled)
+            {
+                ViewboxQuestList.Visibility = Visibility.Hidden;
+                IsQuestListToggled = true;
+            }
+            else
+            {
+                IsQuestListToggled = false;
+                StackQuestList.Children.Clear();
+
+                for (int i = 0; i < MAX_QUESTS; i++)
+                {
+                    if (questComplete[i])
+                    {
+                        AddQuestListItem(questNames[i]);
+                    }
+                }
+                ViewboxQuestList.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void AddQuestListItem(string description)
+        {
+            WrapPanel listItem = new WrapPanel
+            {
+                Margin = new Thickness
+                {
+                    Left = 5,
+                    Right = 5,
+                    Top = 5,
+                    Bottom = 5
+                },
+                Background = new ImageBrush
+                {
+                    ImageSource = new BitmapImage(new Uri($"pack://application:,,,/assets/black.png")),
+                    Stretch = Stretch.UniformToFill,
+                    Opacity = 0.6
+                }
+            };
+
+            Label listDesc = new Label
+            {
+                Foreground = Brushes.White,
+                FontSize = 16
+            };
+            listDesc.Content = description;
+            listItem.Children.Add(listDesc);
+
+            StackQuestList.Children.Add(listItem);
+        }
+        #endregion
+        #region Menu Buttons
+
+        private void BtnMenu_Click(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            OnClickMenu(button);
+        }
+
+        private void OnClickMenu(Button button)
+        {
+            switch(button.Name)
+            {
+                case "BtnMenuClose":
+                    MessageBox.Show($"Game wordt gesloten. Score: {amountOfScore}");
+                    this.Close();
+                    break;
+                case "BtnMenuQuest":
+                    ToggleQuestList();
+                    break;
+                case "BtnMenuMute":
+                    ToggleMute();
+                    break;
+            }
+        }
+        #endregion
+
+        #region Muting Sound
+        bool IsSoundMuted = false;
+
+        private void ToggleMute()
+        {
+            if (IsSoundMuted)
+            {
+
+                Image btnImage = new Image
+                {
+                    Source = new BitmapImage(new Uri("/assets/images/btn_icons/btn_mute_off.png", UriKind.Relative)),
+                };
+                BtnMenuMute.Content = btnImage;
+                IsSoundMuted = false;
+            }
+            else
+            {
+                IsSoundMuted = true;
+
+                Image btnImage = new Image
+                {
+                    Source = new BitmapImage(new Uri("/assets/images/btn_icons/btn_mute_on.png", UriKind.Relative)),
+                };
+
+                BtnMenuMute.Content = btnImage;
+            }
+        }
+
+        private void PlaySyncedSound(System.IO.Stream stream)
+        {
+            if (!IsSoundMuted)
+            {
+                var sound = new System.Media.SoundPlayer();
+                sound.Stop();
+                sound.Stream = stream;
+                sound.Play();
+            }
+        }
+
         #endregion
     }
 }

@@ -124,6 +124,10 @@
     <Content Include="assets\audio\blaster.wav" />
     <Content Include="assets\audio\goldenCookieSound.wav" />
     <Content Include="assets\audio\passiveblast.wav" />
+    <Resource Include="assets\images\btn_icons\btn_close.png" />
+    <Resource Include="assets\images\btn_icons\btn_mute_off.png" />
+    <Resource Include="assets\images\btn_icons\btn_mute_on.png" />
+    <Resource Include="assets\images\btn_icons\btn_quest.png" />
     <Resource Include="assets\bg_gold.png" />
     <Resource Include="assets\images\goldenAsteroid.png" />
     <Resource Include="assets\images\bonus_icons\bonus-alien.png" />

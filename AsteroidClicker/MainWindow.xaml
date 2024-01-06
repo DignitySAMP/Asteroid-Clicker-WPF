@@ -77,7 +77,6 @@
             </Grid>
         </StackPanel>
         <!--#endregion-->
-
         <!--#region Quest MessageBox Panel-->
         <StackPanel Grid.ColumnSpan="3" Visibility="Hidden" VerticalAlignment="Center" HorizontalAlignment="Center" Name="StckQuestOverlay" Opacity="1">
             <Grid>
@@ -93,5 +92,40 @@
             </Grid>
         </StackPanel>
         <!--#endregion-->
+        <!-- #region Quest Panel -->
+        <Viewbox Visibility="Hidden" Name="ViewboxQuestList" Margin="25" Grid.Column="0" Grid.ColumnSpan="3">
+            <StackPanel HorizontalAlignment="Center" Height="380" Width="800">
+                <StackPanel.Background>
+                    <ImageBrush ImageSource="/assets/bg_gold.png" Opacity=".85"></ImageBrush>
+                </StackPanel.Background>
+
+                <Label Foreground="White" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" FontStyle="Italic">
+                    <Label.Effect>
+                        <DropShadowEffect Direction="300" ShadowDepth="2" BlurRadius="1"/>
+                    </Label.Effect> 
+                    Quest List
+                </Label>
+
+                <ScrollViewer Height="340" Margin="5">
+                    <StackPanel Name="StackQuestList"></StackPanel>
+                </ScrollViewer>
+            </StackPanel>
+        </Viewbox>
+        <!-- #endregion  -->
+        <!-- #region Buttons -->
+        <Viewbox Grid.Column="1" VerticalAlignment="Bottom">
+            <WrapPanel  Width="280" Height="50" VerticalAlignment="Center">
+                <Button Click="BtnMenu_Click" Name="BtnMenuMute" Width="50" Height="50" BorderBrush="{x:Null}" Background="#7F000000" Foreground="{x:Null}">
+                    <Image Source="/assets/images/btn_icons/btn_mute_off.png"></Image>
+                </Button>
+                <Button Click="BtnMenu_Click" Name="BtnMenuQuest" Width="50" Height="50" BorderBrush="{x:Null}" Background="#7F000000" Foreground="{x:Null}">
+                    <Image Source="/assets/images/btn_icons/btn_quest.png"></Image>
+                </Button>
+                <Button Click="BtnMenu_Click" Name="BtnMenuClose" Width="50" Height="50" BorderBrush="{x:Null}" Background="#7F000000" Foreground="{x:Null}">
+                    <Image Source="/assets/images/btn_icons/btn_close.png"></Image>
+                </Button>
+            </WrapPanel>
+        </Viewbox>
+        <!-- #endregion -->
     </Grid>
 </Window>
