@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AsteroidClicker"
         mc:Ignorable="d"
-        Title="AsteroidClicker" Height="400" Width="800">
+        Title="AsteroidClicker" Height="400" Width="800" Loaded="Window_Loaded">
     <Grid>
         <Grid.Background>
             <ImageBrush ImageSource="assets/bg.png" Stretch="UniformToFill"></ImageBrush>
@@ -20,6 +20,11 @@
         </Grid.RowDefinitions>
 
         <!-- #region Category Panel -->
+        <!-- 
+        <summary>
+            Creëert een scrollviewer paneel dat later dynamisch wordt opgevuld met de verschillende categorieën en icoontjes.
+        </summary> 
+        -->
         <ScrollViewer Name="ScrollCategories" VerticalScrollBarVisibility="Auto">
             <StackPanel Name="StckCategories" Margin="5">
                 <StackPanel.Background>
@@ -30,6 +35,19 @@
         </ScrollViewer>
         <!-- #endregion -->
         <!--#region Playing Panel-->
+        <!-- 
+        <summary>
+            Voorziet een viewbox met binnen in verschillende elementen:
+            * Informatief
+                - LblMinerName: een label dat aanpasbaar is door de speler.
+                - LblAmount: weergeeft de "portemonnee" en totale score
+            * Speelscherm
+                - GridBlastZone:
+                    - Bevat "ImgAsteroid" wat in deze applicatie de klikbare cookie voorsteld. 
+                    - "CanvasCookiesPerSecondParticles" is een canvas waar een animatie voor passief inkomen in wordt getoond.
+                - CanvasDropParticles: Een canvas dat de elementen voor het vallende effect van debris (animatie) voorziet.
+        </summary> 
+        -->
         <Viewbox Grid.Column="1" Margin="25" >
             <StackPanel VerticalAlignment="Center">
                 <Label Name="LblMinerName" Content="PXL-Asteroid-Miner" HorizontalContentAlignment="Center" Foreground="#FF942aff" FontWeight="Bold" FontSize="16" MouseDoubleClick="LblMinerName_MouseDoubleClick">
@@ -43,20 +61,29 @@
                 <Label Name="LblAmount" Content="0" HorizontalContentAlignment="Center" Foreground="#FFF"></Label>
                 <Grid Name="GridBlastZone">
                     <Image Name="ImgAsteroid" Source="assets/asteroid.png" Height="128" Width="128" MouseDown="ImgAsteroid_MouseDown" MouseUp="ImgAsteroid_MouseUp" MouseLeave="ImgAsteroid_MouseLeave" MouseEnter="ImgAsteroid_MouseEnter"></Image>
-                    <Canvas VerticalAlignment="Top" Name="CookiesPerSecondParticles" Width="125" Height="75"></Canvas>
+                    <Canvas VerticalAlignment="Top" Name="CanvasCookiesPerSecondParticles" Width="125" Height="75"></Canvas>
                 </Grid>
                 <Canvas Name="CanvasDropParticles" Width="125" Height="50"></Canvas>
             </StackPanel>
         </Viewbox>
         <!--#endregion -->
         <!-- #region Golden Cookie Canvas -->
+        <!-- 
+        <summary>
+        Voorziet een Canvas waarin het golden cookie gespawnt kan worden.
+        </summary>
+        -->
         <Viewbox Margin="5" Grid.Column="1" Panel.ZIndex="999">
             <Canvas Width="250" Height="360" Name="CanvasGoldenCookie" VerticalAlignment="Top">
-
             </Canvas>
         </Viewbox>
         <!-- #endregion -->
         <!-- #region Shop Panel -->
+        <!-- 
+        <summary>
+            Voorziet een stackpanel waarin alle shop elementen dynamisch in kunnen worden opgebouwd.
+        </summary>
+        -->
         <StackPanel Grid.Column="2" Name="StckUpgrades">
             <StackPanel.Background>
                 <ImageBrush ImageSource="assets/wall.png" Opacity="0.9"></ImageBrush>
@@ -64,6 +91,12 @@
         </StackPanel>
         <!-- #endregion -->
         <!--#region MessageBox Panel-->
+        <!-- 
+        <summary>
+        Dit is deel van een DHZ functie dat MessageBox.Show vervangt. De volgende elementen behoren tot de opmaak van dit scherm.
+        <para>Standaard is dit element onzichtbaar. Het wordt enkel zichtbaar voor +/-4 seconden wanneer het wordt opgeroepen.</para>
+        </summary>
+        -->
         <StackPanel Grid.ColumnSpan="3" Visibility="Hidden" VerticalAlignment="Center" HorizontalAlignment="Center" Name="StckMessageOverlay" Opacity="1">
             <Grid>
                 <Image Source="assets/black.png" Stretch="UniformToFill" Height="250" Width="{Binding SystemParameters.PrimaryScreenWidth}"></Image>
@@ -78,6 +111,13 @@
         </StackPanel>
         <!--#endregion-->
         <!--#region Quest MessageBox Panel-->
+        <!-- 
+        <summary>
+        Dit is een idem. implementatie van de "MessageBox Panel" code.
+        Dit voorziet een paneel voor een DHZ functie dat MessageBox.Show vervangt. De volgende elementen behoren tot de opmaak van dit scherm.
+        <para>Standaard is dit element onzichtbaar. Het wordt enkel zichtbaar voor +/-4 seconden wanneer het wordt opgeroepen.</para>
+        </summary>
+        -->
         <StackPanel Grid.ColumnSpan="3" Visibility="Hidden" VerticalAlignment="Center" HorizontalAlignment="Center" Name="StckQuestOverlay" Opacity="1">
             <Grid>
                 <Grid.Background>
@@ -93,6 +133,10 @@
         </StackPanel>
         <!--#endregion-->
         <!-- #region Quest Panel -->
+        <!-- 
+        De volgende panelen zijn verantwoordelijk voor het weergeven van vrijgespeelde quests.
+        Deze quests worden dynamisch aan de "StackQuestList" toegevoegd binnen onze code.
+        -->
         <Viewbox Visibility="Hidden" Name="ViewboxQuestList" Margin="25" Grid.Column="0" Grid.ColumnSpan="3">
             <StackPanel HorizontalAlignment="Center" Height="380" Width="800">
                 <StackPanel.Background>
@@ -113,6 +157,12 @@
         </Viewbox>
         <!-- #endregion  -->
         <!-- #region Buttons -->
+        <!--
+        <summary>
+        Deze knoppen zijn menu knoppen. Er is een region voorzien binnen de code dat de functionaliteit bepaalt, maar de namen spreken voor zich.
+        <para>Deze knoppen zijn altijd zichtbaar en zijn ondersteunend voor de speler.</para>
+        </summary>
+        -->
         <Viewbox Grid.Column="1" VerticalAlignment="Bottom">
             <WrapPanel  Width="280" Height="50" VerticalAlignment="Center">
                 <Button Click="BtnMenu_Click" Name="BtnMenuMute" Width="50" Height="50" BorderBrush="{x:Null}" Background="#7F000000" Foreground="{x:Null}">

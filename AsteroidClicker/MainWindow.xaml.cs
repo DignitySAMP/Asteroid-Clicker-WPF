@@ -19,17 +19,28 @@ namespace AsteroidClicker
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// -----------------------------------------
+        /// Description: 
+        /// 1-PRO C# eindproject voor eerste semester (Werkplekleren 1)
+        /// -----------------------------------------
+
         #region Global Variables
         // Global variables
         decimal amountOfAsteroids = 0.0M; // Cookies
         decimal amountOfScore = 0.0M; // Score
         decimal additionAmount = 1; // debug purposes (default: 1) 
         #endregion
-        #region MainWindow
+        #region Opstart Programma
         public MainWindow()
         {
             InitializeComponent();
+        }
 
+        /// <summary>
+        /// Opstart van applicatie: aanmaken van timers en verbergen van panelen dat vrijgespeeld moeten worden.
+        /// </summary>
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
             DispatcherTimer ms_timer = new DispatcherTimer();
             ms_timer.Interval = TimeSpan.FromMilliseconds(10);
             ms_timer.Tick += MS_Timer;
@@ -47,14 +58,23 @@ namespace AsteroidClicker
 
             blast_timer.Interval = TimeSpan.FromMilliseconds(25);
             blast_timer.Tick += Blast_Timer;
-            
+
             ScrollCategories.Visibility = Visibility.Hidden; // only shown after purchase
             StckUpgrades.Visibility = Visibility.Hidden; // only show after unlock
         }
         #endregion
         #region Image Click Events
+        /// <summary>
+        /// Voorziet de klik functionaliteit waardoor er cookies(asteroids) verzameld kunnen worden
+        /// Zie inline comments voor informatie en/of notities
+        /// </summary>
         bool IsMouseInsideImage = false;
         bool ValidMouseClick = false;
+
+        /// <summary>
+        /// Voorziet een animatie bij het klikken van de cookie, geeft de speler een cookie (asteroid), en forceert een update van verwante visuele aspecten (labels, titel, ...).
+        /// <para>Deze functie is alsook verantwoordelijk voor het valideren van de kliks d.m.v. een boolean.</para>
+        /// </summary>
         private void ImgAsteroid_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (IsMouseInsideImage) // Check if the pointer is actually inside our image
@@ -71,6 +91,10 @@ namespace AsteroidClicker
                 ValidMouseClick = true; // Validate our click. This is used in cross reference for additional features (i.e. MouseUp, ...)
             }
         }
+
+        /// <summary>
+        /// Draait één van de effecten terug naar het oorspronkelijke en de-valideert een muisklik.
+        /// </summary>
         private void ImgAsteroid_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (ValidMouseClick)
@@ -79,11 +103,18 @@ namespace AsteroidClicker
                 ValidMouseClick = false;
             }
         }
+
+        /// <summary>
+        /// Deze functie controleert of de muis binnen het klikveld is om "incorrecte" kliks te vermijden.
+        /// </summary>
         private void ImgAsteroid_MouseEnter(object sender, MouseEventArgs e)
         {
             IsMouseInsideImage = true;
         }
 
+        /// <summary>
+        /// Deze functie controleert of de muis buiten het klikveld is om "incorrecte" kliks te vermijden.
+        /// </summary>
         private void ImgAsteroid_MouseLeave(object sender, MouseEventArgs e)
         {   // BUG FIX 1: Reset width to default incase they leave the image without MouseUp being called.
             // BUG FIX 2: Nullify valid mouse click and reset "IsMouseInsideImage" variable appropriately. 
@@ -92,8 +123,11 @@ namespace AsteroidClicker
             ValidMouseClick = false;
         }
         #endregion
-        #region Cookies Per Second
-
+        #region Cookies Per Second (Calculations/Animations)
+        /// <summary>
+        /// Berekent en returnt het aantal cookies dat PASSIEF worden gegenereerd voor ALLE upgrades
+        /// </summary>
+        /// <returns>Aantal cookies per seconde</returns>
         private decimal GetCookiesPerSecond()
         {
             decimal amount = 0;
@@ -108,12 +142,20 @@ namespace AsteroidClicker
             return (amount*100);
         }
 
+        /// <summary>
+        /// Berekent en returnt het aantal cookies dat PASSIEF worden gegenereerd voor SPECIFIEKE upgrades
+        /// </summary>
+        /// <param name="upgrade">De index van de relevante upgrade</param>
+        /// <returns>Aantal cookies per seconde per milliseconde</returns>
         private decimal GetCookiesPerUpgrade(int upgrade)
         {
             var UpgradeData = GetUpgradeData(upgrade);
             return (UpgradeData.output * boughtUpgrades[upgrade]) * (GetBonusUpgradeMultiplier(upgrade));
         }
 
+        /// <summary>
+        /// Voorziet de animaties voor het PASSIEF inkomen van cookies (na aankopen van upgrades)
+        /// </summary>
         private async void ShowCookiesPerSecond()
         {
             if (GetCookiesPerSecond() <= 0) return;
@@ -126,7 +168,7 @@ namespace AsteroidClicker
                 FontWeight = FontWeights.Bold,
                 Content = $"{FormatNumber(GetCookiesPerSecond(), true)}/s",
                 Foreground = (Brush)brushConverter.ConvertFrom("#FF00c531"),
-                Width = CookiesPerSecondParticles.Width,
+                Width = CanvasCookiesPerSecondParticles.Width,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
                 IsHitTestVisible = false
             };
@@ -142,12 +184,12 @@ namespace AsteroidClicker
                 Height = 32,
                 IsHitTestVisible = false, // can click through image
             };
-            Canvas.SetLeft(smallBlastParticleImg, random.Next(0, (int)CookiesPerSecondParticles.Width - 20));
+            Canvas.SetLeft(smallBlastParticleImg, random.Next(0, (int)CanvasCookiesPerSecondParticles.Width - 20));
             Canvas.SetTop(smallBlastParticleImg, random.Next(16, 32));
 
             // Blast animation
             int smallBlastCurrentImage = 0;
-            CookiesPerSecondParticles.Children.Add(smallBlastParticleImg);
+            CanvasCookiesPerSecondParticles.Children.Add(smallBlastParticleImg);
             while (blastCurrentImage < blastParticleImages.Length)
             {
                 await Task.Delay(60);
@@ -158,11 +200,11 @@ namespace AsteroidClicker
                     smallBlastParticleImg.Source = new BitmapImage(new Uri(blastParticleImages[smallBlastCurrentImage], UriKind.Relative));
                 }
             }
-            CookiesPerSecondParticles.Children.Remove(smallBlastParticleImg);
+            CanvasCookiesPerSecondParticles.Children.Remove(smallBlastParticleImg);
 
             // Label animation
             double temp_pos_y = 50;
-            CookiesPerSecondParticles.Children.Add(asteroidPerSecondGain);
+            CanvasCookiesPerSecondParticles.Children.Add(asteroidPerSecondGain);
             while (temp_pos_y > -30 || asteroidPerSecondGain.Opacity > 0.0)
             {
                 await Task.Delay(15);
@@ -171,16 +213,25 @@ namespace AsteroidClicker
                 temp_pos_y--;
                 Canvas.SetTop(asteroidPerSecondGain, temp_pos_y);
             }
-            CookiesPerSecondParticles.Children.Remove(asteroidPerSecondGain);
+            CanvasCookiesPerSecondParticles.Children.Remove(asteroidPerSecondGain);
         }
         #endregion
         #region Custom Functions
+        /// <summary>
+        /// Functie dat de "ms_timer" dat aangemaakt wordt onder "Window_Loaded" ondersteund
+        /// Verantwoordelijk voor het berekenen van passief inkomen, updaten van visuele aspecten van het scherm (labels, titelscherm, upgrade knop data...) en vallende animatie
+        /// </summary>
         private void MS_Timer(object sender, EventArgs e)
         {
             ProcessUpgradeOutput();
-            UpdateVisuals();
+            AdjustInfoLabels();
+            AdjustUpgradeButtons();
             MoveFallingParticles();
         }
+        /// <summary>
+        /// Functie dat de "s_timer" dat aangemaakt wordt onder "Window_Loaded" ondersteund
+        /// Verantwoordelijk voor het vrijspelen van de shop, toevoegen en updaten van de upgrade knoppen, vrijspelen en toevoegen van bonus knoppen en de animaties rondom passief inkomen
+        /// </summary>
         private void S_Timer(object sender, EventArgs e)
         {
             if (!isShopPanelUnlocked && AccessToUpgrades())
@@ -188,15 +239,21 @@ namespace AsteroidClicker
                 CreateShopLayout();
             }
             AddUpgradeButtons();
-            AdjustUpgradeButtons();
             ToggleBonusUpgradeButtons();
             ShowCookiesPerSecond();
         }
+        /// <summary>
+        /// Functie dat de "m_timer" dat aangemaakt wordt onder "Window_Loaded" ondersteund
+        /// Verantwoordelijk voor het spawnen van de Golden Cookie (asteroid) en het gedrag hierrond
+        /// </summary>
         private void M_Timer(object sender, EventArgs e)
         {
             SpawnGoldenCookie();
         }
 
+        /// <summary>
+        /// Voorziet het titelscherm en het label in het "Playing Panel" van consistente updates
+        /// </summary>
         private void AdjustInfoLabels()
         {
             LblAmount.Content = $"{FormatNumber(Math.Floor(amountOfAsteroids))} (totaal: {FormatNumber(Math.Floor(amountOfScore))})";
@@ -204,12 +261,13 @@ namespace AsteroidClicker
 
             CheckQuestProgress_TotalAsteroids();
         }
-        private void UpdateVisuals()
-        {
-            AdjustInfoLabels();
-            AdjustUpgradeButtons();
-        }
 
+        /// <summary>
+        /// Converteerd een nummer naar leesbare getallen. Bijvoorbeeld 1.000.000 wordt 1 miljoen. Voorziet spaties tussen grote getallen (10000 -> 10 000)
+        /// </summary>
+        /// <param name="input">Getal dat geformatteerd moet worden</param>
+        /// <param name="separator">Boolean dat beslist over inclusie decimalen (false=geen)</param>
+        /// <returns>Stringwaarde met geformatteerd getal</returns>
         private string FormatNumber(decimal input, bool separator = false)
         {
             var digitFormat = new NumberFormatInfo { 
@@ -244,6 +302,11 @@ namespace AsteroidClicker
         #region Upgrade Buttons
         Button[] upgradeButton = new Button[MAX_UPGRADES];
         WrapPanel[] upgradeButtonWrapper = new WrapPanel[MAX_UPGRADES];
+
+        /// <summary>
+        /// Voegt de grondlegging van de Upgrade Buttons toe nadat het Shop Panel is vrijgespeeld. 
+        /// <para>Deze worden dynamisch aangemaakt en daarna verborgen afhankelijk van het vrijspelen van de upgrades.</para>
+        /// </summary>
         private void AddUpgradeButtons()
         {
             if (!isShopPanelUnlocked || !AccessToUpgrades())
@@ -306,6 +369,10 @@ namespace AsteroidClicker
             }
         }
 
+        /// <summary>
+        /// Voorziet de upgrade knoppen, aangemaakt via "AddUpgradeButtons()", van content via de upgrade data container.
+        /// </summary>
+        /// <param name="index">De index van de relevante upgrade</param>
         private void SetUpgradeButtonText(int index)
         {
             var UpgradeData = GetUpgradeData(index);
@@ -372,6 +439,9 @@ namespace AsteroidClicker
             else upgradeButton[index].IsEnabled = false;
         }
 
+        /// <summary>
+        /// Voorziet updates van content binnen de upgrade knoppen als deze vrijgespeeld zijn. Dit wordt per 10ms opgeroepen.
+        /// </summary>
         private void AdjustUpgradeButtons()
         {
             for (int i = 0; i < MAX_UPGRADES; i++)
@@ -386,6 +456,10 @@ namespace AsteroidClicker
             }
         }
 
+        /// <summary>
+        /// Functie betreffende het click effecft van de upgrade knoppen.
+        /// <para>Dit linkt de geklikte knop met de functie dat de aankoop bevestigd.</para>
+        /// </summary>
         private void BtnUpgrade_Click(object sender, RoutedEventArgs e)
         {
             Button button = sender as Button;
@@ -396,6 +470,12 @@ namespace AsteroidClicker
 
         Button[] BtnBonusUpgrade = new Button[MAX_UPGRADES]; 
         int[] amountOfBonusUpgrades = new int[MAX_UPGRADES];
+
+        /// <summary>
+        /// Creëert de bonus knop voor elke relevante update knop.
+        /// </summary>
+        /// <param name="container">De container waarin deze knop moet worden aangemaakt.</param>
+        /// <param name="index">De index van de upgrade a.d.h.v. de upgrade data container</param>
         private void CreateBonusButton(StackPanel container, int index)
         {
             BtnBonusUpgrade[index] = new Button
@@ -425,13 +505,23 @@ namespace AsteroidClicker
 
             container.Children.Add(BtnBonusUpgrade[index]);
         }
+
+        /// <summary>
+        /// Functie betreffende het click effect van de bonus knoppen.
+        /// <para>Dit linkt de geklikte knop met de functie dat de aankoop bevestigd.</para>
+        /// </summary>
         private void OnBonusStoreClick(object sender, RoutedEventArgs e)
         {
             Button button = sender as Button;
             ProcessBonusPurchase(button);
         }
 
-
+        /// <summary>
+        /// Returnt de index van de bonus buttons.
+        /// <para>Deze index is noodzakelijk om de juiste upgrade op te roepen via onze upgrade data container.</para>
+        /// </summary>
+        /// <param name="button">Button waarvan de index gevonden moet worden.</param>
+        /// <returns>Index van de button</returns>
         private int GetIndexOfBonusUpgrade(Button button)
         {
             int specifier = -1;
@@ -448,8 +538,12 @@ namespace AsteroidClicker
             return specifier;
         }
 
+        /// <summary>
+        /// Functie dat de aankoop van een specifieke bonus knop behandeld.
+        /// <para>Controle of knop gepast is, controle of bonus koopbaar is en confirmatie dat bonus gekocht is.</para>
+        /// </summary>
+        /// <param name="button">De bonus knop waar de aankoop van behandeld moet worden</param>
         private void ProcessBonusPurchase(Button button)
-
         {
             int specifier = GetIndexOfBonusUpgrade(button);
 
@@ -486,6 +580,11 @@ namespace AsteroidClicker
             else MessageBox.Show("Er is iets misgegaan met de upgrade. (Knop is niet geinitialiseerd)");
         }
 
+        /// <summary>
+        /// Functie dat de kost van de bonus upgrades berekend.
+        /// </summary>
+        /// <param name="index">De index van de upgrade (afhankelijk van upgrade data container)</param>
+        /// <returns>Decimale waarde van de kostprijs</returns>
         private decimal GetBonusUpgradeCost(int index)
         {
             decimal basePrice = GetUpgradeData(index).bonusPrice;
@@ -516,6 +615,9 @@ namespace AsteroidClicker
             return basePrice;
         }
 
+        /// <summary>
+        /// Voorziet het updaten van de visuele elementen binnen de bonus upgrade knoppen, en/of het enablen/disablen ervan (afhankelijk van huidige cookies/asteroids).
+        /// </summary>
         private void ToggleBonusUpgradeButtons()
         {
             for(int i = 0; i < MAX_UPGRADES; i ++)
@@ -528,9 +630,14 @@ namespace AsteroidClicker
             }
         }
 
-        private long GetBonusUpgradeMultiplier(int index)
+        /// <summary>
+        /// Berekent de huidige multiplier van de bonusses PER upgrade
+        /// </summary>
+        /// <param name="index">Index van de upgrade (a.d.h.v. upgrade data container)</param>
+        /// <returns>int waarde van de multiplier.</returns>
+        private int GetBonusUpgradeMultiplier(int index)
         {
-            long multiplier = 1;
+            int multiplier = 1;
 
             if (amountOfBonusUpgrades[index] > 0)
             {
@@ -543,6 +650,10 @@ namespace AsteroidClicker
             return multiplier;
         }
 
+        /// <summary>
+        /// Verantwoordelijk voor het (her-)formatteren van de visuele tekst binnen de bonus upgrade knoppen (huidige bonus, volgende bonus, kostprijs...)
+        /// </summary>
+        /// <param name="index">Index van de relevante upgrade (a.d.h.v. upgrade data container)</param>
         private void UpdateBonusUpgradeButtonText(int index)
         {
             BtnBonusUpgrade[index].Content = "";
@@ -610,6 +721,11 @@ namespace AsteroidClicker
             BtnBonusUpgrade[index].Content = buttonWrapper;
         }
 
+        /// <summary>
+        /// Veranderd de enabled status van de bonus upgrade knoppen afhankelijk van het aantal cookies dat de speler momenteel bezit.
+        /// <para>Indien er niet genoeg cookies zijn voor de aankoopprijs, disable de knop. Anders enable de knop.</para>
+        /// </summary>
+        /// <param name="index">Index van de relevante upgrade (a.d.h.v. upgrade data container)</param>
         private void ToggleBonusUpgradeButton(int index)
         {
             if (GetBonusUpgradeCost(index) <= amountOfAsteroids)
@@ -625,6 +741,9 @@ namespace AsteroidClicker
         int[] boughtUpgrades = new int[MAX_UPGRADES];
 
         bool isShopPanelUnlocked = false;
+        /// <summary>
+        /// Creëert het stack panel dat de elementen van het shop paneel zal opvangen.
+        /// </summary>
         StackPanel shopStackPanel = new StackPanel
         {
             Margin = new Thickness
@@ -638,6 +757,10 @@ namespace AsteroidClicker
             VerticalAlignment = VerticalAlignment.Bottom
         };
 
+        /// <summary>
+        /// Creërt de layout van het shop panel.
+        /// <para>Condities voor vrijspelen worden per seconde gecontroleerd.</para>
+        /// </summary>
         private void CreateShopLayout()
         {
             if (isShopPanelUnlocked) return;
@@ -695,6 +818,12 @@ namespace AsteroidClicker
             StckUpgrades.Children.Add(viewbox);
         }
 
+        /// <summary>
+        /// Deze tuple/array lijst voorziet alle informatie rondom upgrades. Deze wordt constant gerefereerd door meerdere functies. 
+        /// <para>Wordt omschreven als "upgrade data container."</para>
+        /// </summary>
+        /// <param name="index">De index van de upgrade waarvan je informatie wilt ophalen.</param>
+        /// <returns>Een methode dat, na storage in een variabel, het oproepen van de referenties mogelijk maakt per update.</returns>
         private (string name, string description, decimal price, decimal output, string icon, string bonusIcon, decimal bonusPrice) GetUpgradeData(int index)
         {
             /*
@@ -715,6 +844,11 @@ namespace AsteroidClicker
             return upgradeList[index];
         }
 
+        /// <summary>
+        /// Deze functie behandeld de aankopen van een functie.
+        /// <para>Na validatie of de geklikte button een upgrade knop is, wordt de aankoop bevestigd of geweigerd afhankelijk van bezit cookies (asteroids).</para>
+        /// </summary>
+        /// <param name="button">De betreffende button van de upgrade.</param>
         private void ProcessUpgradePurchase(Button button)
         {
             int specifier = GetIndexOfUpgrade(button);
@@ -747,6 +881,12 @@ namespace AsteroidClicker
             else MessageBox.Show("Er is iets misgegaan met de upgrade. (Knop is niet geinitialiseerd)");
         }
 
+        /// <summary>
+        /// Returnt de index van de upgrade buttons.
+        /// <para>Deze index is noodzakelijk om de juiste upgrade op te roepen via onze upgrade data container.</para>
+        /// </summary>
+        /// <param name="button">Button waarvan de index gevonden moet worden.</param>
+        /// <returns>Index van de button</returns>
         private int GetIndexOfUpgrade(Button button)
         {
             int specifier = -1;
@@ -764,6 +904,11 @@ namespace AsteroidClicker
             return specifier;
         }
 
+        /// <summary>
+        /// Berekent de prijs van de betreffende upgrade.
+        /// </summary>
+        /// <param name="upgrade">Index van de upgrade (a.d.h.v. upgrade data container)</param>
+        /// <returns>Decimale waarde dat de prijs bevat.</returns>
         private decimal GetUpgradePrice(int upgrade)
         {
             var UpgradeData = GetUpgradeData(upgrade);
@@ -775,6 +920,11 @@ namespace AsteroidClicker
             return buy_price;
         }
 
+        /// <summary>
+        /// Vormt de upgrade prijs om naar een leesbaar getal.
+        /// </summary>
+        /// <param name="upgrade">Index van de upgrade (a.d.h.v. upgrade data container)</param>
+        /// <returns>String waarde met het geformatteerde getal.</returns>
         private string DisplayUpgradePrice(int upgrade)
         {
             var digitFormat = new NumberFormatInfo
@@ -786,6 +936,10 @@ namespace AsteroidClicker
             return price;
         }
 
+        /// <summary>
+        /// Controleert of de speler genoeg score heeft om een upgrade knop vrij te spelen.
+        /// </summary>
+        /// <returns>Bool waarde met true of false (afhankelijk van parameters dat beslist worden in de functie)</returns>
         private bool AccessToUpgrades()
         {
             bool unlocked = false;
@@ -799,6 +953,11 @@ namespace AsteroidClicker
             }
             return unlocked;
         }
+        /// <summary>
+        /// Controleert of een speler een betreffende upgrade heeft vrijgespeeld.
+        /// </summary>
+        /// <param name="index">Index van de upgrade (a.d.h.v. upgrade data container)</param>
+        /// <returns>Bool waarde met true of false (afhankelijk van vrijspeling)</returns>
         private bool HasUpgradeUnlocked(int index)
         {
             var UpgradeData = GetUpgradeData(index);
@@ -807,6 +966,10 @@ namespace AsteroidClicker
 
         #endregion
         #region Automatic Cookie Gain
+
+        /// <summary>
+        /// Voorziet het berekenen van het passief inkomen dat wordt behaald d.m.v. upgrades, en wordt vermenigvuldigd via bonussen.
+        /// </summary>
         private void ProcessUpgradeOutput()
         {
             for(int i = 0; i < MAX_UPGRADES; i ++)
@@ -825,7 +988,12 @@ namespace AsteroidClicker
 
         #endregion
         #region Custom Message System
-
+        /// <summary>
+        /// Een DHZ functie dat "ShowMessageBox" vervangt. 
+        /// <para>Messages worden getoond voor 3.5 seconden. Functie fades in en uit.</para>
+        /// </summary>
+        /// <param name="title">Gewenste titel voor bericht</param>
+        /// <param name="text">Gewenste text voor bericht.</param>
         private async void ShowFadeMessage(string title, string text)
         {
             LblUpdateTitle.Content = title;
@@ -852,7 +1020,12 @@ namespace AsteroidClicker
         }
 
         #endregion
-        #region Miner Namechanging
+        #region Miner Namechanging System
+
+        /// <summary>
+        /// Ondersteund het veranderen van de applicatie naam. 
+        /// <para>Interactions van VisualBasic worden hiervoor gebruikt.</para>
+        /// </summary>
         private void LblMinerName_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             // BUG: Cancelling returns 0 string size, so the error message is concieved incorrectly.
@@ -870,15 +1043,18 @@ namespace AsteroidClicker
             LblMinerName.Content = inputName;
         }
         #endregion
-        #region Categories
-        // Dependant on upgrade index.
-        string[] categoryImages =
+        #region Category System
+        string[] categoryImages = // Backgrounds used for categories.
         {
             "/assets/images/categories/surface_1.png", "/assets/images/categories/surface_2.png", "/assets/images/categories/surface_3.png",
             "/assets/images/categories/surface_4.png", "/assets/images/categories/surface_5.png", "/assets/images/categories/surface_6.png",
             "/assets/images/categories/surface_7.png"
         };
 
+        /// <summary>
+        /// Creëert (en unlockt) het paneel verantwoordelijk voor het tonen van de verschillende categorieën.
+        /// <para>Deze functie creëert enkel de onderliggende panelen zonder inhoud.</para>
+        /// </summary>
         private void AdjustCategories()
         {
             ScrollCategories.Visibility = Visibility.Visible; // only shown after purchase
@@ -923,7 +1099,8 @@ namespace AsteroidClicker
             StckCategories.Children.Add(viewbox);
             viewbox.Child = stackpanel;
         }
-        string[] categoryTiles =
+
+        string[] categoryTiles = // Icons used for upgrades shown in categories.
         {
             "/assets/images/icons_big/upgrade_astronaut.png",
             "/assets/images/icons_big/upgrade_blaster.png",
@@ -934,9 +1111,13 @@ namespace AsteroidClicker
             "/assets/images/icons_big/upgrade_deathstar.png"
         };
 
+        /// <summary>
+        /// Creëert een "tile" binnen het category paneel (eerder gemaakt door AdjustCategories()).
+        /// </summary>
+        /// <param name="panel">De wrapper waar het icoontje aan moet worden toegevoegd.</param>
+        /// <param name="index">De index van de upgrade (a.d.h.v. de upgrade data container)</param>
         private void SpawnCategoryTiles(WrapPanel panel, int index) // index = category
         {
- 
             WrapPanel tileContent = new WrapPanel
             {
                 VerticalAlignment = VerticalAlignment.Center,
@@ -970,10 +1151,15 @@ namespace AsteroidClicker
             panel.Children.Add(categoryScroller);
         }
         #endregion
-        #region Golden Cookie
+        #region Golden Cookie System
 
         bool isGoldenCookieSpawned = false;
         int goldenCookieClicks = 0;
+
+        /// <summary>
+        /// Spawnt een golden cookie binnen de canvas dat via de XAML is aangemaakt in het playing panel.
+        /// <para>Golden cookies hebben een 30% kans om te spawnen. Er wordt een .wav afgespeeld om de aandacht te trekken.</para>
+        /// </summary>
         private void SpawnGoldenCookie()
         {
             if(isGoldenCookieSpawned)
@@ -1008,6 +1194,11 @@ namespace AsteroidClicker
             }
         }
 
+        /// <summary>
+        /// Berekent de beloning voor het "vangen" van de golden cookie.
+        /// <para>De beloning = alle upgrades * 15 minuten speeltijd.</para>
+        /// </summary>
+        /// <returns>Decimale waarde dat de beloning bevat.</returns>
         private decimal CalculateGoldenCookieReward()
         {
             // The following code snippet is ran per ms (see ProcessUpgradeOutput). 
@@ -1024,6 +1215,9 @@ namespace AsteroidClicker
             return (reward * 900000); // 900 000ms = 15 minutes
         }
 
+        /// <summary>
+        /// Behandelt het ondersteunen van het klikken op de golden cookie.
+        /// </summary>
         private void GoldenCookie_MouseDown(object sender, MouseButtonEventArgs e)
         {
             CanvasGoldenCookie.Children.Clear();
@@ -1033,7 +1227,7 @@ namespace AsteroidClicker
 
             decimal addition = CalculateGoldenCookieReward();
 
-            Random rand = new Random();
+            Random rand = new Random(); // Addition kan 0 zijn als de speler een golden cookie vangt zonder upgrades gekocht te hebben.
             if (addition == 0) addition += rand.Next(0, 150);
 
             StringBuilder sb = new StringBuilder();
@@ -1048,9 +1242,12 @@ namespace AsteroidClicker
 
         }
         #endregion
-        #region Quests
+        #region Quest System
         const int MAX_QUESTS = 110;
 
+        /// <summary>
+        /// Bevat alle constanten voor de quests.
+        /// </summary>
         enum QuestConstants
         {
             // Buy Quests,
@@ -1169,6 +1366,9 @@ namespace AsteroidClicker
             QUEST_ASTEROID_TOTAL_500B,
             QUEST_ASTEROID_TOTAL_1T,
         };
+        /// <summary>
+        /// Bevat alle namen van de quests.
+        /// </summary>
         string[] questNames = new string[MAX_QUESTS]
         {
             "Buy 10 Upgrades",
@@ -1282,8 +1482,14 @@ namespace AsteroidClicker
             "Reach 500,000,000,000 Asteroids",
             "Reach 1,000,000,000,000 Asteroids"
         };
-        bool[] questComplete = new bool[MAX_QUESTS];
 
+        bool[] questComplete = new bool[MAX_QUESTS];
+        
+        /// <summary>
+        /// Controleert of een quest gerelateerd aan bonus upgrades verdient is.
+        /// <para>Afhankelijk van de "index" parameter kan bepaald worden welke quest behaald is.</para>
+        /// </summary>
+        /// <param name="index">Index van een specifieke bonus upgrade.</param>
         private void CheckQuestProgress_BuyBonusUpgrades(int index)
         {
             var upgradeData = GetUpgradeData(index);
@@ -1327,6 +1533,10 @@ namespace AsteroidClicker
                     break;
             }
         }
+
+        /// <summary>
+        /// Controleert of een quest gerelateerd aan golden cookie clicks verdient is.
+        /// </summary>
         private void CheckQuestProgress_GoldenCookieClicks()
         {
             if (goldenCookieClicks >= 1000) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_1000);
@@ -1339,6 +1549,10 @@ namespace AsteroidClicker
             else if (goldenCookieClicks >= 5) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_5);
             else if (goldenCookieClicks >= 1) ProgressQuest(QuestConstants.QUEST_CLICK_GOLDENCOOKIE_1);
         }
+
+        /// <summary>
+        /// Controleert of een quest gerelateerd aan totaal gekochte upgrades verdient is.
+        /// </summary>
         private void CheckQuestProgress_BuyUpgrades()
         {
             long total = 0;
@@ -1366,6 +1580,10 @@ namespace AsteroidClicker
             else if (total >= 25) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_25);
             else if (total >= 10) ProgressQuest(QuestConstants.QUEST_BUY_UPGRADE_10);
         }
+
+        /// <summary>
+        /// Controleert of een quest gerelateerd aan totaal verdiende asteroids verdient is.
+        /// </summary>
         private void CheckQuestProgress_TotalAsteroids()
         {
             if (amountOfAsteroids >= 1000000000000) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_1T);
@@ -1398,6 +1616,12 @@ namespace AsteroidClicker
             else if (amountOfAsteroids >= 500) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_500);
             else if (amountOfAsteroids >= 100) ProgressQuest(QuestConstants.QUEST_ASTEROID_TOTAL_100);
         }
+
+        /// <summary>
+        /// Controleert of een quest gerelateerd aan upgrades verdient is.
+        /// <para>Afhankelijk van de "index" parameter kan bepaald worden welke quest behaald is.</para>
+        /// </summary>
+        /// <param name="index">Index van een specifieke upgrade.</param>
         private void CheckQuestProgress_BuyUpgradeItem(int index)
         {
             var upgradeData = GetUpgradeData(index);
@@ -1457,16 +1681,25 @@ namespace AsteroidClicker
             }
         }
 
+        /// <summary>
+        /// Deze functie zorgt dat een quest behaald wordt.
+        /// <para>Indien een quest reeds behaald is, wordt de quest met deze constant over geslaan.</para>
+        /// </summary>
+        /// <param name="constant">Constant van een specifieke quest</param>
         private void ProgressQuest(QuestConstants constant)
         {
             int index = (int)constant;
-            Console.WriteLine($"Quest Completed for {index}: {questComplete[index]}");
             if (questComplete[index]) return;
             questComplete[index] = true;
 
             ShowQuestMessage("Quest Unlocked", $"{questNames[index]}");
         }
 
+        /// <summary>
+        /// DHZ MessageBox functie dat een message toont wanneer een quest behaald wordt.
+        /// </summary>
+        /// <param name="title">Gewenste titel</param>
+        /// <param name="text">Gewenste omschrijving</param>
         private async void ShowQuestMessage(string title, string text)
         {
             // BUG: This often overlaps useful information. Make it so if this is visible (or FadeMessage), the other gets delayed. This can also be used for overlapping FadeMessages.
@@ -1493,8 +1726,12 @@ namespace AsteroidClicker
             StckQuestOverlay.Visibility = Visibility.Hidden;
         }
         #endregion
-        #region Quest List
+        #region Quest List System
         bool IsQuestListToggled = false;
+
+        /// <summary>
+        /// Deze functie opent of sluit de quest lijst.
+        /// </summary>
         private void ToggleQuestList()
         {
             if (!IsQuestListToggled)
@@ -1518,6 +1755,10 @@ namespace AsteroidClicker
             }
         }
 
+        /// <summary>
+        /// Creëert een canvas per verdiende quest. Deze worden getoond binnen de quest list (toggled door "ToggleQuestList()")
+        /// </summary>
+        /// <param name="description"></param>
         private void AddQuestListItem(string description)
         {
             WrapPanel listItem = new WrapPanel
@@ -1550,12 +1791,19 @@ namespace AsteroidClicker
         #endregion
         #region Menu Buttons
 
+        /// <summary>
+        /// Verantwoordelijk voor de klik functionaliteit van de menu knoppen.
+        /// </summary>
         private void BtnMenu_Click(object sender, RoutedEventArgs e)
         {
             Button button = sender as Button;
             OnClickMenu(button);
         }
 
+        /// <summary>
+        /// Bepaalt de behandeling van klik functionaliteit per menu knop.
+        /// </summary>
+        /// <param name="button">De button waarvan de behandeling bepaalt moet worden.</param>
         private void OnClickMenu(Button button)
         {
             switch(button.Name)
@@ -1573,9 +1821,13 @@ namespace AsteroidClicker
             }
         }
         #endregion
-        #region Muting Sound
+        #region Muting Sound System
         bool IsSoundMuted = false;
 
+        /// <summary>
+        /// Zorgt ervoor dat het geluid gedempt of ongedempt is via een boolean. 
+        /// <para>Deze functie werkt alleen met geluiden dat met de "PlaySyncedSound()" functie gemaakt zijn.</para>
+        /// </summary>
         private void ToggleMute()
         {
             if (IsSoundMuted)
@@ -1601,6 +1853,10 @@ namespace AsteroidClicker
             }
         }
 
+        /// <summary>
+        /// Speelt een specifiek geluid in de cache af indien het geluid ongedempt is (zie "ToggleMute()").
+        /// </summary>
+        /// <param name="stream">Stream-path van het geluid.</param>
         private void PlaySyncedSound(System.IO.Stream stream)
         {
             if (!IsSoundMuted)
@@ -1613,7 +1869,7 @@ namespace AsteroidClicker
         }
 
         #endregion
-        #region Particle System (Blast/Debris)
+        #region Particle System (OnClick)
         // Blast Effect
         string[] blastParticleImages =
         {
@@ -1627,6 +1883,9 @@ namespace AsteroidClicker
         DispatcherTimer blast_timer = new DispatcherTimer();
         int blastCurrentImage = 0;
 
+        /// <summary>
+        /// Creëert een individueel blast particle element en voegt dit toe aan de canvas waar de animatie in wordt gespeeld.
+        /// </summary>
         private void CreateBlastParticle()
         {
             ClearBlastParticle();
@@ -1639,14 +1898,16 @@ namespace AsteroidClicker
             blastParticleImg.IsHitTestVisible = false; // can click through image
 
             blastCurrentImage = 0;
-
-
             PlaySyncedSound(Properties.Resources.blaster);
 
             GridBlastZone.Children.Add(blastParticleImg);
 
             blast_timer.Start();
         }
+
+        /// <summary>
+        /// Deze timer is verantwoordelijk voor het afspelen van de per-frame animatie van de blast animatie.
+        /// </summary>
         private void Blast_Timer(object sender, EventArgs e)
         {
             blastCurrentImage++;
@@ -1659,6 +1920,10 @@ namespace AsteroidClicker
             else blastParticleImg.Source = new BitmapImage(new Uri(blastParticleImages[blastCurrentImage], UriKind.Relative));
         }
 
+        /// <summary>
+        /// Verantwoordelijk voor de opruiming van de blast animatie.
+        /// <para>Dit wordt opgeroepen bij het begin van de "CreateBlastParticle()" functie om overflow en stack collissions te vermijden.</para>
+        /// </summary>
         private void ClearBlastParticle()
         {
             blastCurrentImage = 0;
@@ -1666,7 +1931,7 @@ namespace AsteroidClicker
             blast_timer.Stop();
         }
 
-        // Dropping debris/particle effecft
+        // Dropping debris/particle effect images
         string[] fallingParticleImages =
         {
             "/assets/particles/drop/click_anim_0.png", "/assets/particles/drop/click_anim_1.png", "/assets/particles/drop/click_anim_2.png",
@@ -1676,6 +1941,11 @@ namespace AsteroidClicker
         private static int MAX_FALLING_PARTICLES = 15;
         List<int> fallingParticleIndexes = new List<int>();
         Image[] fallingParticleImg = new Image[MAX_FALLING_PARTICLES];
+
+        /// <summary>
+        /// Creëert de particles voor een vallend effect animatie wanneer er manueel op de asteroid geklikt wordt én voegt dit toe aan de canvas waar de animatie in wordt gespeeld.
+        /// <para>Opgelet: deze functie maakt enkel de elementen aan. De animatie wordt door de "MoveFallingParticles()" functie gedaan.</para>
+        /// </summary>
         private void CreateFallingParticles()
         {
             ClearFallingParticles();
@@ -1705,6 +1975,11 @@ namespace AsteroidClicker
                 fallingParticleIndexes.Add(index);
             }
         }
+
+        /// <summary>
+        /// Beweegt de particles aangemaakt door "CreateFallingParticles()" tot ze buiten het canvas zijn en verwijderd ze.
+        /// <para>Voor een optimaal "smooth" effect wordt deze functie elke 10ms opgeroepen.</para>
+        /// </summary>
         private void MoveFallingParticles()
         {
             Random random = new Random();
@@ -1726,6 +2001,10 @@ namespace AsteroidClicker
             }
         }
 
+        /// <summary>
+        /// Deze functie zorgt dat de elementen en list verantwoordelijk voor de falling particles animatie opgeruimd worden.
+        /// <para>Deze functie wordt opgeroepen wanneer er nieuwe particles aangemaakt worden om overflow en stack collissions te vermijden.</para>
+        /// </summary>
         private void ClearFallingParticles()
         {
             foreach (int index in fallingParticleIndexes)
