@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
@@ -28,7 +29,9 @@ namespace AsteroidClicker
         // Global variables
         decimal amountOfAsteroids = 0.0M; // Cookies
         decimal amountOfScore = 0.0M; // Score
-        decimal additionAmount = 1; // debug purposes (default: 1) 
+        decimal additionAmount = 100000; // debug purposes (default: 1) 
+        int AmountOfClicks = 0; // manual clicks
+        DateTime PlayingTime = DateTime.Now;
         #endregion
         #region Opstart Programma
         public MainWindow()
@@ -61,6 +64,8 @@ namespace AsteroidClicker
 
             ScrollCategories.Visibility = Visibility.Hidden; // only shown after purchase
             StckUpgrades.Visibility = Visibility.Hidden; // only show after unlock
+
+            DateTime PlayingTime = DateTime.Now;
         }
         #endregion
         #region Image Click Events
@@ -81,6 +86,7 @@ namespace AsteroidClicker
             {
                 amountOfAsteroids += additionAmount;
                 amountOfScore += additionAmount;
+                AmountOfClicks++;
                 AdjustInfoLabels();
 
                 Random random = new Random();
@@ -423,13 +429,7 @@ namespace AsteroidClicker
 
             upgradeButtonWrapper[index].Children.Add(btnGrid);
 
-            // Add tooltip to buttons
-            StringBuilder tooltipInfo = new StringBuilder();
-            tooltipInfo.AppendLine($"{UpgradeData.name}");
-            tooltipInfo.AppendLine($"{UpgradeData.description}");
-            tooltipInfo.AppendLine($"");
-            tooltipInfo.Append($"Opbrengst: +{GetCookiesPerUpgrade(index)}/seconde");
-            upgradeButton[index].ToolTip = tooltipInfo.ToString();
+            CreateStatsTooltip(index);
 
             // Enable/disable tooltip based on current asteroids
             if (amountOfAsteroids >= Math.Ceiling(GetUpgradePrice(index))) // ceil it here so they can't buy when button shows "18" (ceiled visually) but they have "17.X"
@@ -739,6 +739,7 @@ namespace AsteroidClicker
         #region Shop/Upgrade System
         static int MAX_UPGRADES = 7;
         int[] boughtUpgrades = new int[MAX_UPGRADES];
+        decimal[] totalUpgradeGain = new decimal[MAX_UPGRADES];
 
         bool isShopPanelUnlocked = false;
         /// <summary>
@@ -980,7 +981,8 @@ namespace AsteroidClicker
                     decimal addition = GetCookiesPerUpgrade(i);
                     amountOfAsteroids += addition;
                     amountOfScore += addition;
-                    Console.WriteLine($"[{UpgradeData.name}] Adding {addition} ({GetBonusUpgradeMultiplier(i)} bonus (default: {UpgradeData.output}) for index {i}, new amount: {amountOfAsteroids}");
+                    totalUpgradeGain[i] += addition;
+                    //Console.WriteLine($"[{UpgradeData.name}] Adding {addition} ({GetBonusUpgradeMultiplier(i)} bonus (default: {UpgradeData.output}) for index {i}, new amount: {amountOfAsteroids}");
                     AdjustInfoLabels();
                 }
             }
@@ -1788,6 +1790,19 @@ namespace AsteroidClicker
 
             StackQuestList.Children.Add(listItem);
         }
+
+        private int CountCompletedQuests()
+        {
+            int completedQuests = 0;
+            for(int i = 0; i < MAX_QUESTS; i ++)
+            {
+                if (questComplete[i] == true)
+                {
+                    completedQuests++;
+                }
+            }
+            return completedQuests;
+        }
         #endregion
         #region Menu Buttons
 
@@ -1817,6 +1832,9 @@ namespace AsteroidClicker
                     break;
                 case "BtnMenuMute":
                     ToggleMute();
+                    break;
+                case "BtnMenuStats":
+                    ShowStats();
                     break;
             }
         }
@@ -2012,6 +2030,101 @@ namespace AsteroidClicker
                 CanvasDropParticles.Children.Remove(fallingParticleImg[index]);
             }
             fallingParticleIndexes.Clear();
+        }
+        #endregion
+        #region Statistics
+
+        /// <summary>
+        /// Toont de gebruiker een paneel met interessante statistieken
+        /// </summary>
+         
+        bool ShowingStats = false;
+        private void ShowStats()
+        {
+            if (!ShowingStats)
+            {
+                ViewboxStatistics.Visibility = Visibility.Visible;
+                ShowingStats = true;
+            }
+            else
+            {
+                ViewboxStatistics.Visibility = Visibility.Hidden;
+                ShowingStats = false;
+            }
+
+            UpdateStats();
+        }
+
+        /// <summary>
+        /// Vult het statistiekenpaneel op met informatie (statistieken).
+        /// </summary>
+        private void UpdateStats()
+        {
+            StackStatistics.Children.Clear();
+
+            CreateStatsItem($"Huidige asteroids: {amountOfAsteroids}");
+            CreateStatsItem($"Totale asteroids: {amountOfScore} (ooit verzameld)");
+            CreateStatsItem($"Huidige speeltijd: {DateTime.Now.Subtract(PlayingTime).Days} dagen, {DateTime.Now.Subtract(PlayingTime).Hours} uur {DateTime.Now.Subtract(PlayingTime).Minutes} minuut en {DateTime.Now.Subtract(PlayingTime).Seconds} seconden.");
+            CreateStatsItem($"{AmountOfClicks} keer op asteroid geklikt");
+            CreateStatsItem($"{goldenCookieClicks} keer op gouden asteroid geklikt");
+            CreateStatsItem($"{CountCompletedQuests()} quests behaald.");
+        }
+
+        /// <summary>
+        /// Voegt een item toe aan het statistieken paneel.
+        /// </summary>
+        /// <param name="description"></param>
+        private void CreateStatsItem(string description) {
+
+            WrapPanel listItem = new WrapPanel
+            {
+                Margin = new Thickness
+                {
+                    Left = 5,
+                    Right = 5,
+                    Top = 5,
+                    Bottom = 5
+                },
+                Background = new ImageBrush
+                {
+                    ImageSource = new BitmapImage(new Uri($"pack://application:,,,/assets/black.png")),
+                    Stretch = Stretch.UniformToFill,
+                    Opacity = 0.6
+                }
+            };
+
+            Label listDesc = new Label
+            {
+                Foreground = Brushes.White,
+                FontSize = 16
+            };
+            listDesc.Content = description;
+            listItem.Children.Add(listDesc);
+
+            StackStatistics.Children.Add(listItem);
+        }
+
+        /// <summary>
+        /// Creëert tooltips op elke upgrade button met relevante informatie.
+        /// </summary>
+        /// <param name="index"></param>
+        private void CreateStatsTooltip(int index)
+        {
+            var UpgradeData = GetUpgradeData(index);
+
+            // Add tooltip to buttons
+            StringBuilder tooltipInfo = new StringBuilder(); 
+            tooltipInfo.AppendLine($"{UpgradeData.name}");
+            tooltipInfo.AppendLine($"{UpgradeData.description}");
+            tooltipInfo.AppendLine($"");
+            tooltipInfo.AppendLine($"{UpgradeData.output} asteroid per seconde.");
+            tooltipInfo.AppendLine($"{boughtUpgrades[index]} {UpgradeData.name} produceren {UpgradeData.output* boughtUpgrades[index]} asteroid per seconde.");
+            decimal percentage = amountOfBonusUpgrades[index] * 10 / 100;
+            tooltipInfo.AppendLine($"{amountOfBonusUpgrades[index]} bonus(sen) verdubbelen de productie {GetBonusUpgradeMultiplier(index)} keer");
+            tooltipInfo.AppendLine($"");
+            tooltipInfo.AppendLine($"{totalUpgradeGain[index]} in totaal geproduceerd");
+            tooltipInfo.Append($"Opbrengst: +{GetCookiesPerUpgrade(index)}/seconde");
+            upgradeButton[index].ToolTip = tooltipInfo.ToString();
         }
         #endregion
     }
