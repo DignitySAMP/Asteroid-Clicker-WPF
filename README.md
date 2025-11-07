@@ -1,10 +1,8 @@
 # Cookie Clicker - first semester assignment
 
-During my first semester as a graduate software developer, we were tasked with building a small game in C#, using the WPF interface. 
+During my first semester studying computer science, we were tasked with building a small game in C# using WPF. This was written without the use of classes or modules, as we had not yet reached this subject yet in our C# course. 
 
-This was written without the use of classes or modules, as we had not yet reached this subject yet in our C# course. 
-
-I hope that by releasing this other aspiring developers can learn from some of my solutions or mistakes. The commits and documentation are in Dutch. The code isn't perfect and has some small issues, but most bugs are fixed.
+This is not very good code, but has been released publically for archiving purposes. The commits and documentation are in Dutch. The code isn't perfect and has some small issues, but most bugs are fixed.
 
 ## Assignment goal
 
